@@ -1,31 +1,33 @@
 import { createSignal, For, onMount, Show, type Component } from "solid-js";
 import type { PermissionRecord } from "../../../../shared/types";
+import { useI18n } from "../../stores/i18n";
 import type { SettingsPrivacyProps } from "./settingsTypes";
 
 const SettingsPrivacy: Component<SettingsPrivacyProps> = (props) => {
+  const { t } = useI18n();
   const [permissions, setPermissions] = createSignal<PermissionRecord[]>([]);
   const loadPermissions = async () => setPermissions(await window.vessel.permissions.getAll());
-  onMount(() => { void loadPermissions(); });
+  onMount(() => {
+    void loadPermissions();
+  });
 
   return (
     <div class="settings-category-panel">
       <div class="settings-field">
         <label class="settings-label" for="domain-policy-mode">
-          Domain Restrictions
+          {t("settings.privacy.domainRestrictions.label")}
         </label>
         <select
           id="domain-policy-mode"
           class="settings-input settings-select"
           value={props.domainMode()}
           onChange={(e) =>
-            props.setDomainMode(
-              e.currentTarget.value as "none" | "allowlist" | "blocklist",
-            )
+            props.setDomainMode(e.currentTarget.value as "none" | "allowlist" | "blocklist")
           }
         >
-          <option value="none">No restrictions</option>
-          <option value="allowlist">Allowlist (only listed domains)</option>
-          <option value="blocklist">Blocklist (block listed domains)</option>
+          <option value="none">{t("settings.privacy.domainRestrictions.none")}</option>
+          <option value="allowlist">{t("settings.privacy.domainRestrictions.allowlist")}</option>
+          <option value="blocklist">{t("settings.privacy.domainRestrictions.blocklist")}</option>
         </select>
         <Show when={props.domainMode() !== "none"}>
           <textarea
@@ -42,21 +44,18 @@ const SettingsPrivacy: Component<SettingsPrivacyProps> = (props) => {
           />
           <p class="settings-hint">
             {props.domainMode() === "allowlist"
-              ? "One domain per line. Subdomains of listed domains are also allowed."
-              : "One domain per line. Subdomains of listed domains are also blocked."}
+              ? t("settings.privacy.domainRestrictions.allowlistHint")
+              : t("settings.privacy.domainRestrictions.blocklistHint")}
           </p>
         </Show>
         <Show when={props.domainMode() === "none"}>
-          <p class="settings-hint">
-            Restrict which domains can be navigated to. Use allowlist mode for
-            kiosk or supervised browsing, blocklist to block specific sites.
-          </p>
+          <p class="settings-hint">{t("settings.privacy.domainRestrictions.noneHint")}</p>
         </Show>
       </div>
 
       <div class="settings-field">
         <label class="settings-label" for="source-do-not-allow-list">
-          Source Do Not Allow List
+          {t("settings.privacy.sourceBlocklist.label")}
         </label>
         <textarea
           id="source-do-not-allow-list"
@@ -67,23 +66,23 @@ const SettingsPrivacy: Component<SettingsPrivacyProps> = (props) => {
           placeholder={"example.com\nlow-quality-source.net"}
           spellcheck={false}
         />
-        <p class="settings-hint">
-          One domain per line. Research Desk will avoid citing or visiting these
-          sources during research, without blocking normal browsing.
-        </p>
+        <p class="settings-hint">{t("settings.privacy.sourceBlocklist.hint")}</p>
       </div>
 
       <div class="settings-field">
-        <label class="settings-label">Site Permissions</label>
-        <p class="settings-hint">
-          Camera, microphone, location, notifications, and other site capability choices remembered by Vessel.
-        </p>
+        <label class="settings-label">{t("settings.privacy.permissions.label")}</label>
+        <p class="settings-hint">{t("settings.privacy.permissions.hint")}</p>
         <div class="settings-list">
-          <For each={permissions()} fallback={<p class="settings-hint">No saved permission decisions yet.</p>}>
+          <For
+            each={permissions()}
+            fallback={<p class="settings-hint">{t("settings.privacy.permissions.empty")}</p>}
+          >
             {(item) => (
               <div class="settings-list-row">
                 <span>{item.origin}</span>
-                <span>{item.permission}: {item.decision}</span>
+                <span>
+                  {item.permission}: {item.decision}
+                </span>
               </div>
             )}
           </For>
@@ -91,9 +90,12 @@ const SettingsPrivacy: Component<SettingsPrivacyProps> = (props) => {
         <button
           type="button"
           class="settings-secondary-btn"
-          onClick={async () => { await window.vessel.permissions.clear(); await loadPermissions(); }}
+          onClick={async () => {
+            await window.vessel.permissions.clear();
+            await loadPermissions();
+          }}
         >
-          Clear saved permissions
+          {t("settings.privacy.permissions.clear")}
         </button>
       </div>
 
@@ -103,21 +105,15 @@ const SettingsPrivacy: Component<SettingsPrivacyProps> = (props) => {
             type="button"
             class="toggle-switch"
             classList={{ on: props.telemetryEnabled() }}
-            onClick={() =>
-              props.setTelemetryEnabled(!props.telemetryEnabled())
-            }
+            onClick={() => props.setTelemetryEnabled(!props.telemetryEnabled())}
             role="switch"
             aria-checked={props.telemetryEnabled()}
           >
             <span class="toggle-switch-thumb" />
           </button>
-          <span>Anonymous Usage Analytics</span>
+          <span>{t("settings.privacy.telemetry.label")}</span>
         </label>
-        <p class="settings-hint">
-          Help improve Vessel by sending anonymous usage data (tool popularity,
-          session duration, provider type). No URLs, page content, queries, or
-          personal data is ever collected.
-        </p>
+        <p class="settings-hint">{t("settings.privacy.telemetry.hint")}</p>
       </div>
     </div>
   );

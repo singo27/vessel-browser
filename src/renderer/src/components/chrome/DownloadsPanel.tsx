@@ -1,5 +1,6 @@
 import { createSignal, For, onCleanup, onMount, Show, type Component } from "solid-js";
 import type { DownloadRecord } from "../../../../shared/types";
+import { useI18n } from "../../stores/i18n";
 import "./chrome.css";
 import { useModalFocus } from "../../lib/useModalFocus";
 
@@ -16,6 +17,7 @@ const formatBytes = (bytes: number) => {
 };
 
 const DownloadsPanel: Component<{ open: boolean; onClose: () => void }> = (props) => {
+  const { t } = useI18n();
   const [items, setItems] = createSignal<DownloadRecord[]>([]);
   let dialogRef: HTMLDivElement | undefined;
   useModalFocus(
@@ -46,8 +48,8 @@ const DownloadsPanel: Component<{ open: boolean; onClose: () => void }> = (props
         >
           <div class="downloads-panel-header">
             <div>
-              <h2 id="downloads-title">Downloads</h2>
-              <p>Recent files saved by Vessel</p>
+              <h2 id="downloads-title">{t("chrome.downloads.title")}</h2>
+              <p>{t("chrome.downloads.subtitle")}</p>
             </div>
             <div class="downloads-panel-actions">
               <button
@@ -56,19 +58,24 @@ const DownloadsPanel: Component<{ open: boolean; onClose: () => void }> = (props
                   await load();
                 }}
               >
-                Clear
+                {t("chrome.downloads.clear")}
               </button>
-              <button onClick={props.onClose}>Close</button>
+              <button onClick={props.onClose}>{t("chrome.downloads.close")}</button>
             </div>
           </div>
           <div class="downloads-panel-list">
-            <For each={items()} fallback={<div class="downloads-empty">No downloads yet.</div>}>
+            <For
+              each={items()}
+              fallback={<div class="downloads-empty">{t("chrome.downloads.empty")}</div>}
+            >
               {(item) => (
                 <div class="downloads-row">
                   <div class="downloads-file">
                     <strong>{item.filename}</strong>
                     <span>{item.savePath}</span>
-                    <Show when={item.url}>{(url) => <span>Source: {url()}</span>}</Show>
+                    <Show when={item.url}>
+                      {(url) => <span>{t("chrome.downloads.source", { url: url() })}</span>}
+                    </Show>
                     <small>
                       {item.state} · {formatBytes(item.receivedBytes)}
                       {item.totalBytes ? ` / ${formatBytes(item.totalBytes)}` : ""}
@@ -79,10 +86,10 @@ const DownloadsPanel: Component<{ open: boolean; onClose: () => void }> = (props
                       disabled={item.state !== "completed"}
                       onClick={() => window.vessel.downloads.open(item.id)}
                     >
-                      Open
+                      {t("chrome.downloads.open")}
                     </button>
                     <button onClick={() => window.vessel.downloads.showInFolder(item.id)}>
-                      Show in folder
+                      {t("chrome.downloads.showInFolder")}
                     </button>
                   </div>
                 </div>

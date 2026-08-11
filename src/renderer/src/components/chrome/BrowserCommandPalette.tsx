@@ -1,11 +1,4 @@
-import {
-  For,
-  Show,
-  createEffect,
-  createMemo,
-  createSignal,
-  type Component,
-} from "solid-js";
+import { For, Show, createEffect, createMemo, createSignal, type Component } from "solid-js";
 import {
   AppWindow,
   Bot,
@@ -28,11 +21,9 @@ import {
 } from "lucide-solid";
 import { useUI } from "../../stores/ui";
 import { useTabs } from "../../stores/tabs";
+import { useI18n } from "../../stores/i18n";
 import { useAnimatedPresence } from "../../lib/useAnimatedPresence";
-import {
-  createBrowserCommands,
-  type BrowserCommand,
-} from "../../lib/browserCommands";
+import { createBrowserCommands, type BrowserCommand } from "../../lib/browserCommands";
 import type { BrowserCommandIconId } from "../../lib/browserCommands";
 import "./BrowserCommandPalette.css";
 
@@ -76,6 +67,7 @@ const BrowserCommandPalette: Component<{
     toggleDevTools,
     openSettings,
   } = useUI();
+  const { t } = useI18n();
   const {
     activeTab,
     activeTabId,
@@ -91,10 +83,7 @@ const BrowserCommandPalette: Component<{
     print,
     printToPdf,
   } = useTabs();
-  const { visible, closing } = useAnimatedPresence(
-    browserCommandPaletteOpen,
-    PALETTE_EXIT_MS,
-  );
+  const { visible, closing } = useAnimatedPresence(browserCommandPaletteOpen, PALETTE_EXIT_MS);
   const [query, setQuery] = createSignal("");
   const [selectedIndex, setSelectedIndex] = createSignal(0);
   let inputRef: HTMLInputElement | undefined;
@@ -138,9 +127,7 @@ const BrowserCommandPalette: Component<{
     const needle = query().trim().toLowerCase();
     if (!needle) return commands();
     return commands().filter((command) =>
-      `${command.label} ${command.hint} ${command.keywords}`
-        .toLowerCase()
-        .includes(needle),
+      `${command.label} ${command.hint} ${command.keywords}`.toLowerCase().includes(needle),
     );
   });
 
@@ -192,15 +179,8 @@ const BrowserCommandPalette: Component<{
 
   return (
     <Show when={visible()}>
-      <div
-        class="browser-command-overlay"
-        classList={{ closing: closing() }}
-        onClick={close}
-      >
-        <section
-          class="browser-command-palette"
-          onClick={(event) => event.stopPropagation()}
-        >
+      <div class="browser-command-overlay" classList={{ closing: closing() }} onClick={close}>
+        <section class="browser-command-palette" onClick={(event) => event.stopPropagation()}>
           <div class="browser-command-search">
             <Search size={17} aria-hidden="true" />
             <input
@@ -208,7 +188,7 @@ const BrowserCommandPalette: Component<{
               value={query()}
               onInput={(event) => setQuery(event.currentTarget.value)}
               onKeyDown={onKeyDown}
-              placeholder="Search browser commands..."
+              placeholder={t("chrome.commandPalette.placeholder")}
               spellcheck={false}
             />
             <kbd>Esc</kbd>
@@ -216,9 +196,7 @@ const BrowserCommandPalette: Component<{
           <div class="browser-command-list" role="listbox">
             <Show
               when={filteredCommands().length > 0}
-              fallback={
-                <div class="browser-command-empty">No matching commands</div>
-              }
+              fallback={<div class="browser-command-empty">{t("chrome.commandPalette.empty")}</div>}
             >
               <For each={filteredCommands()}>
                 {(command, index) => {
@@ -241,11 +219,7 @@ const BrowserCommandPalette: Component<{
                         <span class="browser-command-hint">{command.hint}</span>
                       </span>
                       <Show when={command.shortcut}>
-                        {(shortcut) => (
-                          <kbd class="browser-command-shortcut">
-                            {shortcut()}
-                          </kbd>
-                        )}
+                        {(shortcut) => <kbd class="browser-command-shortcut">{shortcut()}</kbd>}
                       </Show>
                     </button>
                   );

@@ -1,9 +1,11 @@
 import { createSignal, For, Show, type Component } from "solid-js";
 import { SEARCH_ENGINE_PRESETS } from "../../../../shared/types";
-import type { SearchEngineId, UpdateCheckResult } from "../../../../shared/types";
+import type { LocalePreference, SearchEngineId, UpdateCheckResult } from "../../../../shared/types";
+import { useI18n } from "../../stores/i18n";
 import type { SettingsGeneralProps } from "./settingsTypes";
 
 const SettingsGeneral: Component<SettingsGeneralProps> = (props) => {
+  const { t } = useI18n();
   const [checkingUpdates, setCheckingUpdates] = createSignal(false);
   const [updateResult, setUpdateResult] = createSignal<UpdateCheckResult | null>(null);
 
@@ -21,41 +23,34 @@ const SettingsGeneral: Component<SettingsGeneralProps> = (props) => {
       <Show when={props.welcomeBanner.show()}>
         <div class="welcome-banner">
           <div class="welcome-banner-header">
-            <span class="welcome-banner-title">Welcome to Vessel</span>
-            <button
-              class="welcome-banner-dismiss"
-              onClick={props.welcomeBanner.dismiss}
-            >
+            <span class="welcome-banner-title">{t("settings.general.welcome.title")}</span>
+            <button class="welcome-banner-dismiss" onClick={props.welcomeBanner.dismiss}>
               &times;
             </button>
           </div>
-          <p class="welcome-banner-text">Get started in three steps:</p>
+          <p class="welcome-banner-text">{t("settings.general.welcome.intro")}</p>
           <ol class="welcome-banner-steps">
             <li>
-              <strong>Configure a chat provider</strong> — switch to AI & Agent
-              to add an API key
+              <strong>{t("settings.general.welcome.step1Title")}</strong>
+              {t("settings.general.welcome.step1Body")}
             </li>
             <li>
-              <strong>Connect your agent harness</strong> — point it at the MCP
-              endpoint shown in AI & Agent
+              <strong>{t("settings.general.welcome.step2Title")}</strong>
+              {t("settings.general.welcome.step2Body")}
             </li>
             <li>
-              <strong>Learn the shortcuts</strong> — press <kbd>?</kbd> anytime
-              for a quick reference
+              <strong>{t("settings.general.welcome.step3Title")}</strong>
+              {t("settings.general.welcome.step3Before")}
+              <kbd>?</kbd>
+              {t("settings.general.welcome.step3After")}
             </li>
           </ol>
           <Show when={!props.premiumActive()}>
             <div class="welcome-banner-actions">
-              <button
-                class="premium-btn premium-btn-upgrade"
-                onClick={props.startPremiumCheckout}
-              >
-                Try Premium free for 7 days — $5.99/mo after
+              <button class="premium-btn premium-btn-upgrade" onClick={props.startPremiumCheckout}>
+                {t("settings.general.welcome.premiumCta")}
               </button>
-              <span class="welcome-banner-note">
-                Best for screenshots, saved sessions, credential vault, and
-                longer autonomous runs.
-              </span>
+              <span class="welcome-banner-note">{t("settings.general.welcome.premiumNote")}</span>
             </div>
           </Show>
         </div>
@@ -63,7 +58,7 @@ const SettingsGeneral: Component<SettingsGeneralProps> = (props) => {
 
       <div class="settings-field">
         <label class="settings-label" for="default-homepage">
-          Homepage
+          {t("settings.general.homepage.label")}
         </label>
         <input
           id="default-homepage"
@@ -73,77 +68,77 @@ const SettingsGeneral: Component<SettingsGeneralProps> = (props) => {
           placeholder="https://start.duckduckgo.com"
           spellcheck={false}
         />
-        <p class="settings-hint">
-          The page that opens when you create a new tab or launch Vessel without
-          restoring a previous session.
-        </p>
+        <p class="settings-hint">{t("settings.general.homepage.hint")}</p>
       </div>
 
       <div class="settings-field">
         <label class="settings-label" for="default-search-engine">
-          Default Search Engine
+          {t("settings.general.searchEngine.label")}
         </label>
         <select
           id="default-search-engine"
           class="settings-input"
           value={props.defaultSearchEngine()}
-          onChange={(e) =>
-            props.setDefaultSearchEngine(
-              e.currentTarget.value as SearchEngineId,
-            )
-          }
+          onChange={(e) => props.setDefaultSearchEngine(e.currentTarget.value as SearchEngineId)}
         >
           <For each={Object.entries(SEARCH_ENGINE_PRESETS)}>
             {([id, preset]) => <option value={id}>{preset.label}</option>}
           </For>
-          <option value="none">None (disabled)</option>
+          <option value="none">{t("settings.general.searchEngine.none")}</option>
         </select>
-        <p class="settings-hint">
-          Used for searches typed directly into the address bar and for agent web-search fallbacks.
-          "None" disables address-bar search, so entries are treated as URLs only.
-        </p>
+        <p class="settings-hint">{t("settings.general.searchEngine.hint")}</p>
       </div>
 
       <div class="settings-field">
         <label class="settings-label" for="download-path">
-          Download Location
+          {t("settings.general.downloadPath.label")}
         </label>
         <input
           id="download-path"
           class="settings-input"
           value={props.downloadPath()}
           onInput={(e) => props.setDownloadPath(e.currentTarget.value)}
-          placeholder="Default: ~/Downloads"
+          placeholder={t("settings.general.downloadPath.placeholder")}
           spellcheck={false}
         />
-        <p class="settings-hint">
-          Directory for saved files. Leave blank to use the system default
-          Downloads folder.
-        </p>
+        <p class="settings-hint">{t("settings.general.downloadPath.hint")}</p>
       </div>
 
       <div class="settings-field">
         <label class="settings-label" for="theme-select">
-          Theme
+          {t("settings.general.theme.label")}
         </label>
         <select
           id="theme-select"
           class="settings-input settings-select"
           value={props.theme()}
-          onChange={(e) =>
-            props.setTheme(e.currentTarget.value as "dark" | "light")
-          }
+          onChange={(e) => props.setTheme(e.currentTarget.value as "dark" | "light")}
         >
-          <option value="dark">Dark</option>
-          <option value="light">Light</option>
+          <option value="dark">{t("settings.general.theme.dark")}</option>
+          <option value="light">{t("settings.general.theme.light")}</option>
         </select>
-        <p class="settings-hint">
-          Choose the application color scheme. Takes effect after saving.
-        </p>
+        <p class="settings-hint">{t("settings.general.theme.hint")}</p>
       </div>
 
       <div class="settings-field">
-        <label class="settings-label">Updates</label>
+        <label class="settings-label" for="locale-select">
+          {t("settings.general.locale.label")}
+        </label>
+        <select
+          id="locale-select"
+          class="settings-input settings-select"
+          value={props.locale()}
+          onChange={(e) => props.setLocale(e.currentTarget.value as LocalePreference)}
+        >
+          <option value="system">{t("settings.general.locale.system")}</option>
+          <option value="en">{t("settings.general.locale.en")}</option>
+          <option value="zh-CN">{t("settings.general.locale.zhCN")}</option>
+        </select>
+        <p class="settings-hint">{t("settings.general.locale.hint")}</p>
+      </div>
+
+      <div class="settings-field">
+        <label class="settings-label">{t("settings.general.updates.label")}</label>
         <div class="settings-inline-actions">
           <button
             type="button"
@@ -151,7 +146,9 @@ const SettingsGeneral: Component<SettingsGeneralProps> = (props) => {
             disabled={checkingUpdates()}
             onClick={checkUpdates}
           >
-            {checkingUpdates() ? "Checking…" : "Check for updates"}
+            {checkingUpdates()
+              ? t("settings.general.updates.checking")
+              : t("settings.general.updates.check")}
           </button>
           <Show when={updateResult()?.updateAvailable}>
             <button
@@ -159,7 +156,7 @@ const SettingsGeneral: Component<SettingsGeneralProps> = (props) => {
               class="settings-secondary-btn"
               onClick={() => window.vessel.updates.openDownload()}
             >
-              Open latest release
+              {t("settings.general.updates.openRelease")}
             </button>
           </Show>
         </div>
@@ -168,21 +165,34 @@ const SettingsGeneral: Component<SettingsGeneralProps> = (props) => {
             <p class="settings-hint">
               <Show
                 when={!result().error}
-                fallback={<>Could not check for updates: {result().error}</>}
+                fallback={
+                  <>
+                    {t("settings.general.updates.error", {
+                      error: result().error ?? "",
+                    })}
+                  </>
+                }
               >
                 <Show
                   when={result().updateAvailable}
-                  fallback={<>Vessel is up to date. Current version: {result().currentVersion}.</>}
+                  fallback={
+                    <>
+                      {t("settings.general.updates.upToDate", {
+                        version: result().currentVersion,
+                      })}
+                    </>
+                  }
                 >
-                  Update available: {result().latestVersion} is available. You have {result().currentVersion}.
+                  {t("settings.general.updates.available", {
+                    latest: result().latestVersion ?? "",
+                    current: result().currentVersion,
+                  })}
                 </Show>
               </Show>
             </p>
           )}
         </Show>
-        <p class="settings-hint">
-          Checks the published npm package and links to GitHub Releases for installers/AppImages.
-        </p>
+        <p class="settings-hint">{t("settings.general.updates.hint")}</p>
       </div>
 
       <div class="settings-field">
@@ -191,15 +201,13 @@ const SettingsGeneral: Component<SettingsGeneralProps> = (props) => {
             type="button"
             class="toggle-switch"
             classList={{ on: props.autoRestoreSession() }}
-            onClick={() =>
-              props.setAutoRestoreSession(!props.autoRestoreSession())
-            }
+            onClick={() => props.setAutoRestoreSession(!props.autoRestoreSession())}
             role="switch"
             aria-checked={props.autoRestoreSession()}
           >
             <span class="toggle-switch-thumb" />
           </button>
-          <span>Restore last browser session on launch</span>
+          <span>{t("settings.general.autoRestore.label")}</span>
         </label>
       </div>
 
@@ -209,20 +217,15 @@ const SettingsGeneral: Component<SettingsGeneralProps> = (props) => {
             type="button"
             class="toggle-switch"
             classList={{ on: props.clearBookmarksOnLaunch() }}
-            onClick={() =>
-              props.setClearBookmarksOnLaunch(!props.clearBookmarksOnLaunch())
-            }
+            onClick={() => props.setClearBookmarksOnLaunch(!props.clearBookmarksOnLaunch())}
             role="switch"
             aria-checked={props.clearBookmarksOnLaunch()}
           >
             <span class="toggle-switch-thumb" />
           </button>
-          <span>Start bookmarks fresh on launch</span>
+          <span>{t("settings.general.clearBookmarks.label")}</span>
         </label>
-        <p class="settings-hint">
-          Off by default. When enabled, bookmark folders and saved pages are
-          cleared each time Vessel starts.
-        </p>
+        <p class="settings-hint">{t("settings.general.clearBookmarks.hint")}</p>
       </div>
     </div>
   );

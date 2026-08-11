@@ -1,12 +1,7 @@
-import {
-  For,
-  createEffect,
-  createSignal,
-  onCleanup,
-  type Component,
-} from "solid-js";
+import { For, createEffect, createSignal, onCleanup, type Component } from "solid-js";
 import type { AgentActionEntry } from "../../../../shared/types";
 import { useRuntime } from "../../stores/runtime";
+import { useI18n } from "../../stores/i18n";
 import "./chrome.css";
 
 interface ToastItem {
@@ -29,6 +24,7 @@ function isBookmarkToastCandidate(action: AgentActionEntry): boolean {
 
 const BookmarkNotifications: Component = () => {
   const { runtimeState } = useRuntime();
+  const { t } = useI18n();
   const [toasts, setToasts] = createSignal<ToastItem[]>([]);
   const notifiedActionIds = new Set<string>();
   let seeded = false;
@@ -42,9 +38,7 @@ const BookmarkNotifications: Component = () => {
     }
 
     // Mark as leaving to trigger exit animation
-    setToasts((current) =>
-      current.map((t) => (t.id === toastId ? { ...t, leaving: true } : t)),
-    );
+    setToasts((current) => current.map((t) => (t.id === toastId ? { ...t, leaving: true } : t)));
 
     // Remove after exit animation completes
     window.setTimeout(() => {
@@ -70,8 +64,8 @@ const BookmarkNotifications: Component = () => {
       notifiedActionIds.add(action.id);
       const title =
         action.name === "create_bookmark_folder"
-          ? "Folder created"
-          : "Bookmark saved";
+          ? t("chrome.notifications.folderCreated")
+          : t("chrome.notifications.bookmarkSaved");
       const toast: ToastItem = {
         id: action.id,
         title,
@@ -80,10 +74,7 @@ const BookmarkNotifications: Component = () => {
       };
 
       setToasts((current) => [...current.slice(-2), toast]);
-      const timeoutId = window.setTimeout(
-        () => dismissToast(toast.id),
-        TOAST_DURATION_MS,
-      );
+      const timeoutId = window.setTimeout(() => dismissToast(toast.id), TOAST_DURATION_MS);
       timeoutIds.set(toast.id, timeoutId);
     }
   });
@@ -109,7 +100,7 @@ const BookmarkNotifications: Component = () => {
               <button
                 type="button"
                 class="bookmark-toast-close"
-                aria-label="Dismiss notification"
+                aria-label={t("chrome.notifications.dismiss")}
                 onClick={() => dismissToast(toast.id)}
               >
                 ×

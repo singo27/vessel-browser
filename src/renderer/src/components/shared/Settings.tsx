@@ -4,6 +4,7 @@ import { useUI } from "../../stores/ui";
 import { useAnimatedPresence } from "../../lib/useAnimatedPresence";
 import type {
   AgentTranscriptDisplayMode,
+  LocalePreference,
   PremiumState,
   ProviderId,
   ProviderConfig,
@@ -11,6 +12,7 @@ import type {
   RuntimeHealthState,
   SearchEngineId,
 } from "../../../../shared/types";
+import { useI18n } from "../../stores/i18n";
 
 import { createLogger } from "../../../../shared/logger";
 import { PROVIDERS } from "../../../../shared/providers";
@@ -48,6 +50,7 @@ const CHAT_PROVIDERS = Object.values(PROVIDERS).map((p) => ({
 const logger = createLogger("Settings");
 
 const Settings: Component = () => {
+  const { t } = useI18n();
   const { settingsOpen, closeSettings } = useUI();
   const { visible: settingsVisible, closing: settingsClosing } = useAnimatedPresence(
     settingsOpen,
@@ -84,6 +87,7 @@ const Settings: Component = () => {
 
   // Theme
   const [theme, setTheme] = createSignal<"dark" | "light">("dark");
+  const [localePreference, setLocalePreference] = createSignal<LocalePreference>("system");
 
   // Domain policy
   const [domainMode, setDomainMode] = createSignal<"none" | "allowlist" | "blocklist">("none");
@@ -514,6 +518,7 @@ const Settings: Component = () => {
     const settings = await window.vessel.settings.get();
     const runtimeHealth = await window.vessel.settings.getHealth();
     setTheme(settings.theme ?? "dark");
+    setLocalePreference(settings.locale ?? "system");
     setDefaultUrl(settings.defaultUrl ?? "https://start.duckduckgo.com");
     setDefaultSearchEngine(settings.defaultSearchEngine ?? "duckduckgo");
     setDownloadPath(settings.downloadPath ?? "");
@@ -585,8 +590,8 @@ const Settings: Component = () => {
           kind: "success",
           text:
             nextState.status === "trialing"
-              ? "Premium trial active. Enjoy the unlocked toolkit."
-              : "Premium activated. Your premium tools are ready.",
+              ? t("settings.messages.premiumTrialActive")
+              : t("settings.messages.premiumActivated"),
         });
       }
     });
@@ -615,12 +620,13 @@ const Settings: Component = () => {
       if (!Number.isInteger(parsedPort) || parsedPort < 1 || parsedPort > 65535) {
         setStatus({
           kind: "error",
-          text: "MCP port must be an integer between 1 and 65535.",
+          text: t("settings.messages.mcpPortInvalid"),
         });
         return;
       }
 
       await window.vessel.settings.set("theme", theme());
+      await window.vessel.settings.set("locale", localePreference());
       await window.vessel.settings.set("downloadPath", downloadPath().trim());
       await window.vessel.settings.set(
         "defaultUrl",
@@ -672,12 +678,12 @@ const Settings: Component = () => {
       await loadState();
       setStatus({
         kind: "success",
-        text: "Saved. MCP server settings are applied immediately.",
+        text: t("settings.messages.saved"),
       });
     } catch (error) {
       setStatus({
         kind: "error",
-        text: error instanceof Error ? error.message : "Failed to save settings.",
+        text: error instanceof Error ? error.message : t("settings.messages.saveFailed"),
       });
     }
   };
@@ -702,14 +708,12 @@ const Settings: Component = () => {
           onClick={(e) => e.stopPropagation()}
         >
           <h2 id="settings-title" class="settings-title">
-            Runtime Settings
+            {t("settings.nav.title")}
           </h2>
 
           <Show when={!premiumActive()}>
             <div class="settings-compact-upsell">
-              <span class="settings-compact-upsell-text">
-                Premium: screenshots, saved sessions, credential vault, and longer autonomous runs.
-              </span>
+              <span class="settings-compact-upsell-text">{t("settings.upsell.text")}</span>
               <div class="settings-compact-upsell-actions">
                 <button
                   class="premium-btn premium-btn-upgrade"
@@ -718,20 +722,24 @@ const Settings: Component = () => {
                     startPremiumCheckout();
                   }}
                 >
-                  Try free for 7 days
+                  {t("settings.upsell.tryFree")}
                 </button>
                 <button
                   class="premium-btn premium-btn-activate"
                   onClick={() => selectCategory("account")}
                 >
-                  Activate
+                  {t("settings.upsell.activate")}
                 </button>
               </div>
             </div>
           </Show>
 
           <div class="settings-layout">
-            <nav class="settings-sidebar" role="navigation" aria-label="Settings categories">
+            <nav
+              class="settings-sidebar"
+              role="navigation"
+              aria-label={t("settings.nav.ariaLabel")}
+            >
               <button
                 class="settings-nav-item"
                 classList={{ active: activeCategory() === "general" }}
@@ -739,7 +747,7 @@ const Settings: Component = () => {
                 aria-current={activeCategory() === "general" ? "page" : undefined}
               >
                 <Globe size={16} />
-                <span>General</span>
+                <span>{t("settings.nav.general")}</span>
               </button>
               <button
                 class="settings-nav-item"
@@ -748,7 +756,7 @@ const Settings: Component = () => {
                 aria-current={activeCategory() === "agent" ? "page" : undefined}
               >
                 <Cpu size={16} />
-                <span>AI & Agent</span>
+                <span>{t("settings.nav.agent")}</span>
               </button>
               <button
                 class="settings-nav-item"
@@ -757,7 +765,7 @@ const Settings: Component = () => {
                 aria-current={activeCategory() === "vaults" ? "page" : undefined}
               >
                 <Shield size={16} />
-                <span>Vaults</span>
+                <span>{t("settings.nav.vaults")}</span>
               </button>
               <button
                 class="settings-nav-item"
@@ -766,7 +774,7 @@ const Settings: Component = () => {
                 aria-current={activeCategory() === "privacy" ? "page" : undefined}
               >
                 <Lock size={16} />
-                <span>Privacy</span>
+                <span>{t("settings.nav.privacy")}</span>
               </button>
               <button
                 class="settings-nav-item"
@@ -775,7 +783,7 @@ const Settings: Component = () => {
                 aria-current={activeCategory() === "account" ? "page" : undefined}
               >
                 <User size={16} />
-                <span>Account</span>
+                <span>{t("settings.nav.account")}</span>
               </button>
             </nav>
 
@@ -791,6 +799,8 @@ const Settings: Component = () => {
                   setDownloadPath={setDownloadPath}
                   theme={theme}
                   setTheme={setTheme}
+                  locale={localePreference}
+                  setLocale={setLocalePreference}
                   autoRestoreSession={autoRestoreSession}
                   setAutoRestoreSession={setAutoRestoreSession}
                   clearBookmarksOnLaunch={clearBookmarksOnLaunch}
@@ -973,10 +983,10 @@ const Settings: Component = () => {
 
           <div class="settings-actions">
             <button class="settings-save" onClick={handleSave}>
-              Save
+              {t("settings.actions.save")}
             </button>
             <button class="settings-close" onClick={closeSettings}>
-              Close
+              {t("settings.actions.close")}
             </button>
           </div>
 

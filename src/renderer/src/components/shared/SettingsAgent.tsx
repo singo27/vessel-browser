@@ -2,6 +2,7 @@ import { createSignal, For, Show, type Component } from "solid-js";
 import type { ProviderId, ReasoningEffortLevel } from "../../../../shared/types";
 import type { AgentTranscriptDisplayMode } from "../../../../shared/types";
 import { PROVIDERS } from "../../../../shared/providers";
+import { useI18n } from "../../stores/i18n";
 import type { SettingsAgentProps } from "./settingsTypes";
 
 const CHAT_PROVIDERS = Object.values(PROVIDERS).map((p) => ({
@@ -15,35 +16,37 @@ const CHAT_PROVIDERS = Object.values(PROVIDERS).map((p) => ({
   models: p.models,
 }));
 
-const REASONING_EFFORT_OPTIONS: Array<{
-  value: ReasoningEffortLevel;
-  label: string;
-}> = [
-  { value: "off", label: "Off" },
-  { value: "low", label: "Low" },
-  { value: "medium", label: "Medium" },
-  { value: "high", label: "High" },
-  { value: "max", label: "Max" },
-];
+const REASONING_EFFORT_VALUES: ReasoningEffortLevel[] = ["off", "low", "medium", "high", "max"];
 
 const SettingsAgent: Component<SettingsAgentProps> = (props) => {
+  const { t } = useI18n();
   const [mcpTokenMessage, setMcpTokenMessage] = createSignal<string | null>(null);
   const chatMeta = () =>
-    CHAT_PROVIDERS.find((p) => p.id === props.chat.providerId()) ??
-    CHAT_PROVIDERS[0];
+    CHAT_PROVIDERS.find((p) => p.id === props.chat.providerId()) ?? CHAT_PROVIDERS[0];
   const openRouterConnecting = () =>
     props.chat.openRouterAuthStatus() === "waiting" ||
     props.chat.openRouterAuthStatus() === "exchanging";
 
+  const reasoningLabel = (value: ReasoningEffortLevel): string => {
+    switch (value) {
+      case "off":
+        return t("settings.agent.reasoning.off");
+      case "low":
+        return t("settings.agent.reasoning.low");
+      case "medium":
+        return t("settings.agent.reasoning.medium");
+      case "high":
+        return t("settings.agent.reasoning.high");
+      case "max":
+        return t("settings.agent.reasoning.max");
+    }
+  };
+
   return (
     <div class="settings-category-panel">
       <div class="settings-callout">
-        <div class="settings-callout-title">External Agent Control</div>
-        <p class="settings-callout-copy">
-          Vessel is configured to run under an external harness such as Hermes
-          Agent or OpenClaw. Provider and model selection are not configured
-          inside Vessel.
-        </p>
+        <div class="settings-callout-title">{t("settings.agent.externalControl.title")}</div>
+        <p class="settings-callout-copy">{t("settings.agent.externalControl.body")}</p>
       </div>
 
       <Show
@@ -53,10 +56,8 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
         }
       >
         <div class="settings-callout">
-          <div class="settings-callout-title">Start With Free AI</div>
-          <p class="settings-callout-copy">
-            Connect OpenRouter and Vessel will use the free model router automatically.
-          </p>
+          <div class="settings-callout-title">{t("settings.agent.freeAi.title")}</div>
+          <p class="settings-callout-copy">{t("settings.agent.freeAi.body")}</p>
           <div class="settings-inline-actions" style="margin-top:12px">
             <button
               type="button"
@@ -68,11 +69,11 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
                 when={!openRouterConnecting()}
                 fallback={
                   props.chat.openRouterAuthStatus() === "exchanging"
-                    ? "Finishing setup..."
-                    : "Opening OpenRouter..."
+                    ? t("settings.agent.freeAi.finishing")
+                    : t("settings.agent.freeAi.opening")
                 }
               >
-                Start free with OpenRouter
+                {t("settings.agent.freeAi.connect")}
               </Show>
             </button>
           </div>
@@ -96,18 +97,15 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
           >
             <span class="toggle-switch-thumb" />
           </button>
-          <span>Enable Chat Assistant</span>
+          <span>{t("settings.agent.chatEnabled.label")}</span>
         </label>
-        <p class="settings-hint">
-          Adds a Chat tab to the sidebar for conversing with an AI provider of
-          your choice.
-        </p>
+        <p class="settings-hint">{t("settings.agent.chatEnabled.hint")}</p>
       </div>
 
       <Show when={props.chat.enabled()}>
         <div class="settings-field">
           <label class="settings-label" for="chat-provider">
-            Provider
+            {t("settings.agent.provider.label")}
           </label>
           <select
             id="chat-provider"
@@ -123,15 +121,13 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
               props.chat.resetProviderModels();
             }}
           >
-            <For each={CHAT_PROVIDERS}>
-              {(p) => <option value={p.id}>{p.name}</option>}
-            </For>
+            <For each={CHAT_PROVIDERS}>{(p) => <option value={p.id}>{p.name}</option>}</For>
           </select>
         </div>
 
         <Show when={props.chat.providerType() === "codex_oauth"}>
           <div class="settings-field">
-            <label class="settings-label">Account</label>
+            <label class="settings-label">{t("settings.agent.account.label")}</label>
             <Show
               when={props.chat.codexAuthStatus() === "connected"}
               fallback={
@@ -151,12 +147,9 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
                               class="settings-btn"
                               onClick={() => props.chat.startCodexAuth()}
                             >
-                              Connect with ChatGPT
+                              {t("settings.agent.codex.connect")}
                             </button>
-                            <p class="settings-hint">
-                              Sign in with your ChatGPT Plus or Pro subscription. A
-                              browser tab will open where you'll authorize Vessel.
-                            </p>
+                            <p class="settings-hint">{t("settings.agent.codex.hint")}</p>
                           </div>
                         }
                       >
@@ -168,7 +161,7 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
                           class="settings-btn"
                           onClick={() => props.chat.startCodexAuth()}
                         >
-                          Try Again
+                          {t("settings.agent.codex.tryAgain")}
                         </button>
                       </Show>
                     }
@@ -176,17 +169,16 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
                     <p class="settings-hint" style="color:var(--accent-primary)">
                       <Show
                         when={props.chat.codexAuthStatus() === "waiting"}
-                        fallback="Exchanging authorization..."
+                        fallback={t("settings.agent.codex.exchanging")}
                       >
-                        Waiting for browser login...
-                      </Show>
-                      {" "}
+                        {t("settings.agent.codex.waiting")}
+                      </Show>{" "}
                       <button
                         type="button"
                         class="settings-link-btn"
                         onClick={() => window.vessel.codex.cancelAuth()}
                       >
-                        Cancel
+                        {t("settings.agent.codex.cancel")}
                       </button>
                     </p>
                   </Show>
@@ -194,11 +186,12 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
               }
             >
               <div style="display:flex;align-items:center;gap:8px">
-                <span
-                  style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block"
-                />
+                <span style="width:8px;height:8px;border-radius:50%;background:var(--success);display:inline-block" />
                 <span>
-                  Connected as {props.chat.codexAccountEmail() || "ChatGPT"}
+                  {t("settings.agent.codex.connectedAs", {
+                    email:
+                      props.chat.codexAccountEmail() || t("settings.agent.codex.connectedFallback"),
+                  })}
                 </span>
               </div>
               <p class="settings-hint">
@@ -207,7 +200,7 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
                   class="settings-link-btn"
                   onClick={() => props.chat.disconnectCodex()}
                 >
-                  Disconnect
+                  {t("settings.agent.codex.disconnect")}
                 </button>
               </p>
             </Show>
@@ -217,15 +210,14 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
         <Show
           when={
             props.chat.providerType() !== "codex_oauth" &&
-            (chatMeta().requiresKey ||
-            props.chat.providerId() === "custom")
+            (chatMeta().requiresKey || props.chat.providerId() === "custom")
           }
         >
           <div class="settings-field">
             <label class="settings-label" for="chat-api-key">
-              API Key
+              {t("settings.agent.apiKey.label")}
               <Show when={!chatMeta().requiresKey}>
-                <span class="settings-label-optional"> (optional)</span>
+                <span class="settings-label-optional"> {t("settings.agent.apiKey.optional")}</span>
               </Show>
             </label>
             <input
@@ -241,33 +233,23 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
               }}
               placeholder={
                 props.chat.hasStoredApiKey() && !props.chat.apiKey().trim()
-                  ? "Stored securely. Enter a new key to replace it."
-                  : chatMeta().keyPlaceholder || "Bearer token or API key"
+                  ? t("settings.agent.apiKey.storedPlaceholder")
+                  : chatMeta().keyPlaceholder || t("settings.agent.apiKey.defaultPlaceholder")
               }
               spellcheck={false}
             />
-            <Show
-              when={
-                props.chat.hasStoredApiKey() && !props.chat.apiKey().trim()
-              }
-            >
-              <p class="settings-hint">
-                An API key is already stored securely for this provider. Leave
-                this blank to keep it, or enter a new key to replace it.
-              </p>
+            <Show when={props.chat.hasStoredApiKey() && !props.chat.apiKey().trim()}>
+              <p class="settings-hint">{t("settings.agent.apiKey.storedHint")}</p>
             </Show>
             <Show when={props.chat.providerId() === "custom"}>
-              <p class="settings-hint">
-                If your endpoint requires authentication, enter the API key or
-                bearer token here.
-              </p>
+              <p class="settings-hint">{t("settings.agent.apiKey.customHint")}</p>
             </Show>
           </div>
         </Show>
 
         <div class="settings-field">
           <label class="settings-label" for="chat-model">
-            Model
+            {t("settings.agent.model.label")}
           </label>
           <div style="display:flex;gap:6px;align-items:center">
             <Show
@@ -281,12 +263,12 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
                   onInput={(e) => props.chat.setModel(e.currentTarget.value)}
                   placeholder={
                     props.chat.modelFetchState() === "loading"
-                      ? "Fetching models…"
+                      ? t("settings.agent.model.fetching")
                       : chatMeta().requiresKey &&
                           !props.chat.apiKey().trim() &&
                           !props.chat.hasStoredApiKey()
-                        ? "Enter API key to load models"
-                        : chatMeta().defaultModel || "model name"
+                        ? t("settings.agent.model.enterKey")
+                        : chatMeta().defaultModel || t("settings.agent.model.namePlaceholder")
                   }
                   spellcheck={false}
                 />
@@ -307,7 +289,7 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
             <button
               type="button"
               class="settings-refresh-btn"
-              title="Refresh model list"
+              title={t("settings.agent.model.refreshTitle")}
               disabled={props.chat.modelFetchState() === "loading"}
               onClick={() => props.chat.doFetchModels()}
             >
@@ -316,7 +298,7 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
           </div>
           <Show when={props.chat.modelFetchState() === "error"}>
             <p class="settings-hint" style="color:var(--error)">
-              Could not fetch models — check your API key and connection.
+              {t("settings.agent.model.fetchError")}
             </p>
           </Show>
           <Show when={props.chat.modelFetchWarning()}>
@@ -328,15 +310,10 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
           </Show>
         </div>
 
-        <Show
-          when={
-            chatMeta().needsBaseUrl ||
-            props.chat.providerId() === "custom"
-          }
-        >
+        <Show when={chatMeta().needsBaseUrl || props.chat.providerId() === "custom"}>
           <div class="settings-field">
             <label class="settings-label" for="chat-base-url">
-              Base URL
+              {t("settings.agent.baseUrl.label")}
             </label>
             <input
               id="chat-base-url"
@@ -349,46 +326,32 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
           </div>
         </Show>
         <Show when={props.chat.providerId() === "llama_cpp"}>
-          <p class="settings-hint">
-            Vessel auto-detects the active model from your configured{" "}
-            <code>llama-server</code> base URL. For agent loops, run{" "}
-            <code>llama-server</code> with <code>--ctx-size 16384</code> minimum
-            and <code>32768</code> recommended.
-          </p>
+          <p class="settings-hint">{t("settings.agent.llamaCpp.hint")}</p>
         </Show>
 
         <div class="settings-field">
           <label class="settings-label" for="chat-reasoning-effort">
-            Reasoning Level
+            {t("settings.agent.reasoning.label")}
           </label>
           <select
             id="chat-reasoning-effort"
             class="settings-input settings-select"
             value={props.chat.reasoningEffort()}
             onChange={(e) =>
-              props.chat.setReasoningEffort(
-                e.currentTarget.value as ReasoningEffortLevel,
-              )
+              props.chat.setReasoningEffort(e.currentTarget.value as ReasoningEffortLevel)
             }
           >
-            <For each={REASONING_EFFORT_OPTIONS}>
-              {(option) => (
-                <option value={option.value}>{option.label}</option>
-              )}
+            <For each={REASONING_EFFORT_VALUES}>
+              {(value) => <option value={value}>{reasoningLabel(value)}</option>}
             </For>
           </select>
-          <p class="settings-hint">
-            Applies to providers and models that expose reasoning controls.
-            Off requests no reasoning where supported and otherwise leaves the
-            model at its normal behavior; Max requests the strongest supported
-            reasoning tier.
-          </p>
+          <p class="settings-hint">{t("settings.agent.reasoning.hint")}</p>
         </div>
       </Show>
 
       <div class="settings-field">
         <label class="settings-label" for="mcp-port">
-          MCP Port
+          {t("settings.agent.mcpPort.label")}
         </label>
         <input
           id="mcp-port"
@@ -398,11 +361,7 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
           placeholder="3100"
           spellcheck={false}
         />
-        <p class="settings-hint">
-          External harnesses connect to Vessel at{" "}
-          <code>http://127.0.0.1:&lt;port&gt;/mcp</code>. Changing this value
-          restarts the MCP server immediately.
-        </p>
+        <p class="settings-hint">{t("settings.agent.mcpPort.hint")}</p>
         <div class="settings-inline-actions">
           <button
             type="button"
@@ -411,12 +370,12 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
               const result = await window.vessel.settings.regenerateMcpToken();
               setMcpTokenMessage(
                 result
-                  ? "MCP token regenerated. Update any external client config using Vessel's auth file."
-                  : "MCP server is not running, so no token was regenerated.",
+                  ? t("settings.agent.mcpPort.tokenRegenerated")
+                  : t("settings.agent.mcpPort.notRunning"),
               );
             }}
           >
-            Regenerate MCP token
+            {t("settings.agent.mcpPort.regenerate")}
           </button>
         </div>
         <Show when={mcpTokenMessage()}>
@@ -426,14 +385,14 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
 
       <div class="settings-field">
         <label class="settings-label" for="max-tool-iterations">
-          Max Tool Iterations
+          {t("settings.agent.maxIterations.label")}
         </label>
         <Show
           when={props.premiumActive()}
           fallback={
             <div
               class="settings-input settings-input-disabled"
-              title="Upgrade to Vessel Premium for unlimited tool iterations"
+              title={t("settings.agent.maxIterations.premiumTitle")}
             >
               50
             </div>
@@ -451,54 +410,42 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
           />
         </Show>
         <p class="settings-hint">
-          <Show
-            when={props.premiumActive()}
-            fallback="Free tier: 50 tool calls per conversation turn. Upgrade to Vessel Premium to customize this limit (up to 1,000)."
-          >
-            Maximum number of tool calls the AI agent can make per conversation
-            turn before pausing. Higher values let the agent complete longer
-            multi-step workflows without stopping. Range: 10–1000.
+          <Show when={props.premiumActive()} fallback={t("settings.agent.maxIterations.freeHint")}>
+            {t("settings.agent.maxIterations.premiumHint")}
           </Show>
         </p>
       </div>
 
       <div class="settings-field">
         <label class="settings-label" for="agent-transcript-mode">
-          Agent Transcript Monitor
+          {t("settings.agent.transcript.label")}
         </label>
         <select
           id="agent-transcript-mode"
           class="settings-input settings-select"
           value={props.agentTranscriptMode()}
           onChange={(e) =>
-            props.setAgentTranscriptMode(
-              e.currentTarget.value as AgentTranscriptDisplayMode,
-            )
+            props.setAgentTranscriptMode(e.currentTarget.value as AgentTranscriptDisplayMode)
           }
         >
-          <option value="off">Off</option>
-          <option value="full">Full transcript</option>
+          <option value="off">{t("settings.agent.transcript.off")}</option>
+          <option value="full">{t("settings.agent.transcript.full")}</option>
         </select>
-        <p class="settings-hint">
-          Controls the in-browser transcript monitor when an external harness
-          publishes reasoning or status updates into Vessel via the{" "}
-          <code>vessel_publish_transcript</code> MCP tool. Full transcript
-          shows the recent entry list.
-        </p>
+        <p class="settings-hint">{t("settings.agent.transcript.hint")}</p>
       </div>
 
       <Show when={props.health()}>
         {(currentHealth) => (
           <div class="settings-health">
-            <div class="settings-callout-title">Runtime Health</div>
+            <div class="settings-callout-title">{t("settings.agent.health.title")}</div>
             <p class="settings-hint">
-              MCP status: <strong>{currentHealth().mcp.status}</strong>{" "}
+              {t("settings.agent.health.mcpStatus")} <strong>{currentHealth().mcp.status}</strong>{" "}
               {currentHealth().mcp.message}
             </p>
             <Show when={currentHealth().mcp.endpoint}>
               {(endpoint) => (
                 <p class="settings-hint">
-                  Active endpoint: <code>{endpoint()}</code>
+                  {t("settings.agent.health.activeEndpoint")} <code>{endpoint()}</code>
                 </p>
               )}
             </Show>
@@ -514,9 +461,7 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
                   >
                     <strong>{issue.title}</strong>
                     <div>{issue.detail}</div>
-                    <Show when={issue.action}>
-                      {(action) => <div>{action()}</div>}
-                    </Show>
+                    <Show when={issue.action}>{(action) => <div>{action()}</div>}</Show>
                   </div>
                 ))}
               </div>
@@ -527,20 +472,17 @@ const SettingsAgent: Component<SettingsAgentProps> = (props) => {
 
       <div class="settings-field">
         <label class="settings-label" for="obsidian-vault-path">
-          Obsidian Vault Path
+          {t("settings.agent.obsidian.label")}
         </label>
         <input
           id="obsidian-vault-path"
           class="settings-input"
           value={props.obsidianVaultPath()}
           onInput={(e) => props.setObsidianVaultPath(e.currentTarget.value)}
-          placeholder="/home/you/Documents/MyVault"
+          placeholder={t("settings.agent.obsidian.placeholder")}
           spellcheck={false}
         />
-        <p class="settings-hint">
-          Optional. When set, Vessel memory tools can write markdown notes into
-          this vault for research breadcrumbs and summaries.
-        </p>
+        <p class="settings-hint">{t("settings.agent.obsidian.hint")}</p>
       </div>
     </div>
   );

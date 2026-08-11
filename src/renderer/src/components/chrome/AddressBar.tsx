@@ -23,6 +23,7 @@ import { parseDiffSummaryParts } from "../../lib/pageDiffDisplay";
 import { formatElapsedTime, formatRelativeTime } from "../../lib/timeDisplay";
 import { SEARCH_ENGINE_PRESETS, type SearchEngineId } from "../../../../shared/types";
 import { Settings as SettingsIcon, Trash2, VenetianMask } from "lucide-solid";
+import { useI18n } from "../../stores/i18n";
 import "./chrome.css";
 
 interface AutocompleteItem {
@@ -39,6 +40,7 @@ const AddressBar: Component<{
   const { activeTab, activeTabId, navigate, goBack, goForward, reload, toggleAdBlock } = useTabs();
   const { runtimeState } = useRuntime();
   const { toggleSidebar, openSettings, toggleDevTools, devtoolsPanelOpen } = useUI();
+  const { t } = useI18n();
   const isPrivateWindow = new URLSearchParams(window.location.search).get("private") === "1";
   const { historyState } = useHistory();
   const { bookmarksState } = useBookmarks();
@@ -141,7 +143,11 @@ const AddressBar: Component<{
   };
 
   const getChangeKindLabel = (kind: PageDiff["changes"][number]["kind"]) =>
-    kind === "added" ? "Added" : kind === "removed" ? "Removed" : "Changed";
+    kind === "added"
+      ? t("chrome.addressBar.diff.added")
+      : kind === "removed"
+        ? t("chrome.addressBar.diff.removed")
+        : t("chrome.addressBar.diff.changed");
 
   createEffect(() => {
     if (isPrivateWindow) return;
@@ -218,7 +224,7 @@ const AddressBar: Component<{
     if (results.length < MAX_SUGGESTIONS) {
       results.push({
         url: buildSearchUrl(rawQuery),
-        title: `Search for "${rawQuery}"`,
+        title: t("chrome.addressBar.searchFor", { query: rawQuery }),
         subtitle: searchEnginePreset().label,
         source: "search",
       });
@@ -359,7 +365,11 @@ const AddressBar: Component<{
   };
 
   const formatSectionLabel = (section: PageDiff["changes"][number]["section"]) =>
-    section === "title" ? "Title" : section === "headings" ? "Headings" : "Content";
+    section === "title"
+      ? t("chrome.addressBar.diff.title")
+      : section === "headings"
+        ? t("chrome.addressBar.diff.headings")
+        : t("chrome.addressBar.diff.content");
 
   return (
     <div class="address-bar">
@@ -368,7 +378,7 @@ const AddressBar: Component<{
           class="nav-btn"
           onClick={goBack}
           disabled={!activeTab()?.canGoBack}
-          data-tooltip="Back"
+          data-tooltip={t("chrome.addressBar.back")}
         >
           <svg width="14" height="14" viewBox="0 0 14 14">
             <path
@@ -385,7 +395,7 @@ const AddressBar: Component<{
           class="nav-btn"
           onClick={goForward}
           disabled={!activeTab()?.canGoForward}
-          data-tooltip="Forward"
+          data-tooltip={t("chrome.addressBar.forward")}
         >
           <svg width="14" height="14" viewBox="0 0 14 14">
             <path
@@ -398,7 +408,7 @@ const AddressBar: Component<{
             />
           </svg>
         </button>
-        <button class="nav-btn" onClick={reload} data-tooltip="Reload">
+        <button class="nav-btn" onClick={reload} data-tooltip={t("chrome.addressBar.reload")}>
           <svg width="14" height="14" viewBox="0 0 14 14">
             <path
               d="M2.5 7a4.5 4.5 0 1 1 1 3"
@@ -420,9 +430,9 @@ const AddressBar: Component<{
       </div>
 
       <Show when={isPrivateWindow}>
-        <div class="private-badge" title="Private Browsing - history and cookies are not saved">
+        <div class="private-badge" title={t("chrome.addressBar.private.title")}>
           <VenetianMask size={12} />
-          <span>Private</span>
+          <span>{t("chrome.addressBar.private.label")}</span>
         </div>
       </Show>
 
@@ -433,10 +443,10 @@ const AddressBar: Component<{
             onClick={() => setShowSecurityPopup((prev) => !prev)}
             title={
               securityState()?.status === "secure"
-                ? "Secure connection"
+                ? t("chrome.addressBar.secure")
                 : securityState()?.status === "insecure"
-                  ? "Connection not secure"
-                  : "Certificate error"
+                  ? t("chrome.addressBar.insecure")
+                  : t("chrome.addressBar.certError")
             }
           >
             <Switch
@@ -494,8 +504,8 @@ const AddressBar: Component<{
               // Delay to allow click on suggestion
               scheduleAddressBlurReset();
             }}
-            placeholder="Search or enter URL"
-            aria-label="Address and search"
+            placeholder={t("chrome.addressBar.placeholder")}
+            aria-label={t("chrome.addressBar.ariaLabel")}
             role="combobox"
             spellcheck={false}
             autocomplete="off"
@@ -544,10 +554,10 @@ const AddressBar: Component<{
           <button
             class="page-diff-trigger"
             onClick={() => void openDiffTimeline()}
-            title="Open the What Changed timeline"
+            title={t("chrome.addressBar.whatChangedTitle")}
           >
             <span class="page-diff-trigger-dot" aria-hidden="true" />
-            <span class="page-diff-trigger-text">What Changed?</span>
+            <span class="page-diff-trigger-text">{t("chrome.addressBar.whatChanged")}</span>
           </button>
         </Show>
       </div>
@@ -556,9 +566,11 @@ const AddressBar: Component<{
         <div class="page-diff-popup">
           <div class="page-diff-popup-header">
             <div class="page-diff-popup-header-copy">
-              <span>Compared with your last visit</span>
+              <span>{t("chrome.addressBar.diffCompared")}</span>
               <span class="page-diff-burst-meta">
-                Previous snapshot from {formatRelativeTime(pageDiff()!.oldSnapshot.capturedAt)}
+                {t("chrome.addressBar.diffPreviousSnapshot", {
+                  time: formatRelativeTime(pageDiff()!.oldSnapshot.capturedAt),
+                })}
               </span>
               <Show
                 when={
@@ -568,8 +580,13 @@ const AddressBar: Component<{
                 }
               >
                 <span class="page-diff-burst-meta">
-                  Updated {pageDiff()!.burstCount} times over{" "}
-                  {formatElapsedTime(pageDiff()!.firstDetectedAt!, pageDiff()!.lastDetectedAt!)}
+                  {t("chrome.addressBar.diffUpdatedBurst", {
+                    count: pageDiff()!.burstCount!,
+                    duration: formatElapsedTime(
+                      pageDiff()!.firstDetectedAt!,
+                      pageDiff()!.lastDetectedAt!,
+                    ),
+                  })}
                 </span>
               </Show>
             </div>
@@ -578,9 +595,9 @@ const AddressBar: Component<{
                 class="nav-btn"
                 style="height: 24px; min-width: auto; padding: 0 8px;"
                 onClick={() => void openDiffTimeline()}
-                title="Open the full What Changed timeline"
+                title={t("chrome.addressBar.whatChangedTitle")}
               >
-                Timeline
+                {t("chrome.addressBar.timeline")}
               </button>
               <button class="page-diff-popup-close" onClick={() => setDiffExpanded(false)}>
                 &times;
@@ -591,12 +608,16 @@ const AddressBar: Component<{
             when={pageDiff()!.recentBursts?.length && (pageDiff()!.recentBursts?.length || 0) > 1}
           >
             <div class="page-diff-burst-history">
-              <div class="page-diff-burst-history-label">Recent detections</div>
+              <div class="page-diff-burst-history-label">
+                {t("chrome.addressBar.recentDetections")}
+              </div>
               <For each={pageDiff()!.recentBursts}>
                 {(burst, i) => (
                   <div class="page-diff-burst-row" classList={{ latest: i() === 0 }}>
                     <span class="page-diff-burst-time">
-                      {i() === 0 ? "Latest" : formatRelativeTime(burst.detectedAt)}
+                      {i() === 0
+                        ? t("chrome.addressBar.latest")
+                        : formatRelativeTime(burst.detectedAt)}
                     </span>
                     <span class="page-diff-burst-summary">
                       <For each={parseDiffSummaryParts(burst.summary)}>
@@ -629,13 +650,17 @@ const AddressBar: Component<{
                   <div class="page-diff-snippets">
                     <Show when={change.before}>
                       <div class="page-diff-snippet">
-                        <span class="page-diff-snippet-label">Before</span>
+                        <span class="page-diff-snippet-label">
+                          {t("chrome.addressBar.diff.before")}
+                        </span>
                         <span class="page-diff-snippet-text">{change.before}</span>
                       </div>
                     </Show>
                     <Show when={change.after}>
                       <div class="page-diff-snippet">
-                        <span class="page-diff-snippet-label">After</span>
+                        <span class="page-diff-snippet-label">
+                          {t("chrome.addressBar.diff.after")}
+                        </span>
                         <span class="page-diff-snippet-text">{change.after}</span>
                       </div>
                     </Show>
@@ -643,7 +668,7 @@ const AddressBar: Component<{
                 </Show>
                 <Show when={change.addedItems?.length}>
                   <div class="page-diff-list-group">
-                    <span class="page-diff-list-label">Added</span>
+                    <span class="page-diff-list-label">{t("chrome.addressBar.diff.added")}</span>
                     <ul class="page-diff-list">
                       <For each={change.addedItems}>{(item) => <li>{item}</li>}</For>
                     </ul>
@@ -651,7 +676,7 @@ const AddressBar: Component<{
                 </Show>
                 <Show when={change.removedItems?.length}>
                   <div class="page-diff-list-group">
-                    <span class="page-diff-list-label">Removed</span>
+                    <span class="page-diff-list-label">{t("chrome.addressBar.diff.removed")}</span>
                     <ul class="page-diff-list">
                       <For each={change.removedItems}>{(item) => <li>{item}</li>}</For>
                     </ul>
@@ -677,8 +702,8 @@ const AddressBar: Component<{
           }}
           title={
             activeTab()?.adBlockingEnabled
-              ? "Ad Block: On (click to disable)"
-              : "Ad Block: Off (click to enable)"
+              ? t("chrome.addressBar.adBlock.on")
+              : t("chrome.addressBar.adBlock.off")
           }
         >
           <svg width="14" height="14" viewBox="0 0 14 14">
@@ -716,7 +741,7 @@ const AddressBar: Component<{
             class="nav-btn"
             classList={{ active: !!activeTab()?.isReaderMode }}
             onClick={() => window.vessel.content.toggleReader()}
-            data-tooltip="Reader Mode"
+            data-tooltip={t("chrome.addressBar.readerMode")}
           >
             <svg width="14" height="14" viewBox="0 0 14 14">
               <rect
@@ -740,7 +765,7 @@ const AddressBar: Component<{
             class="nav-btn"
             classList={{ active: devtoolsPanelOpen() }}
             onClick={toggleDevTools}
-            data-tooltip="Dev Tools"
+            data-tooltip={t("chrome.addressBar.devTools")}
           >
             <svg width="14" height="14" viewBox="0 0 14 14">
               <polyline
@@ -778,8 +803,10 @@ const AddressBar: Component<{
             onClick={toggleSidebar}
             title={
               pendingApprovalCount() > 0
-                ? `AI Sidebar — ${pendingApprovalCount()} pending approval${pendingApprovalCount() > 1 ? "s" : ""}`
-                : "AI Sidebar (Ctrl+Shift+L)"
+                ? pendingApprovalCount() === 1
+                  ? t("chrome.addressBar.sidebarPendingOne", { count: pendingApprovalCount() })
+                  : t("chrome.addressBar.sidebarPending", { count: pendingApprovalCount() })
+                : t("chrome.addressBar.sidebar")
             }
           >
             <svg width="14" height="14" viewBox="0 0 14 14">
@@ -796,17 +823,28 @@ const AddressBar: Component<{
               <line x1="9" y1="1" x2="9" y2="13" stroke="currentColor" stroke-width="1.2" />
             </svg>
             <Show when={pendingApprovalCount() > 0}>
-              <span class="nav-btn-badge" aria-label={`${pendingApprovalCount()} pending`}>
+              <span
+                class="nav-btn-badge"
+                aria-label={t("chrome.addressBar.pendingAria", { count: pendingApprovalCount() })}
+              >
                 {pendingApprovalCount()}
               </span>
             </Show>
           </button>
         </Show>
         <Show when={!isPrivateWindow}>
-          <button class="nav-btn" onClick={props.onClearData} data-tooltip="Clear Data">
+          <button
+            class="nav-btn"
+            onClick={props.onClearData}
+            data-tooltip={t("chrome.addressBar.clearData")}
+          >
             <Trash2 size={14} />
           </button>
-          <button class="nav-btn" onClick={openSettings} data-tooltip="Settings">
+          <button
+            class="nav-btn"
+            onClick={openSettings}
+            data-tooltip={t("chrome.addressBar.settings")}
+          >
             <SettingsIcon size={14} strokeWidth={1.8} />
           </button>
         </Show>

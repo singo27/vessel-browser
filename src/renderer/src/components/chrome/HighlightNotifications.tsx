@@ -1,4 +1,5 @@
 import { createEffect, createSignal, onCleanup, Show, type Component } from "solid-js";
+import { useI18n } from "../../stores/i18n";
 import "./chrome.css";
 
 interface Props {
@@ -10,6 +11,7 @@ const TOAST_DURATION_MS = 3000;
 const TOAST_EXIT_MS = 300;
 
 const HighlightNotifications: Component<Props> = (props) => {
+  const { t } = useI18n();
   const [visible, setVisible] = createSignal(false);
   const [leaving, setLeaving] = createSignal(false);
   const [current, setCurrent] = createSignal<{ title: string; message: string } | null>(null);
@@ -57,7 +59,7 @@ const HighlightNotifications: Component<Props> = (props) => {
             <button
               type="button"
               class="bookmark-toast-close"
-              aria-label="Dismiss notification"
+              aria-label={t("chrome.notifications.dismiss")}
               onClick={dismiss}
             >
               ×

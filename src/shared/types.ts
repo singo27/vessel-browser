@@ -595,9 +595,13 @@ export const SEARCH_ENGINE_PRESETS: Record<
   kagi: { label: "Kagi", url: "https://kagi.com/search?q=" },
 };
 
+export type LocalePreference = "system" | "en" | "zh-CN";
+
 export interface VesselSettings {
   defaultUrl: string;
   theme: "dark" | "light";
+  /** UI language preference. `system` follows the OS/Electron locale. */
+  locale: LocalePreference;
   sidebarPanelMode: SidebarPanelMode;
   sidebarWidth: number;
   sidebarDetachedBounds: SidebarDetachedBounds | null;

@@ -4,6 +4,7 @@ import { useTabs } from "../../stores/tabs";
 import type { TabGroupColor, TabState } from "../../../../shared/types";
 import { useNow } from "../../stores/clock";
 import { useRuntime } from "../../stores/runtime";
+import { useI18n } from "../../stores/i18n";
 import { getAgentActiveTabIds } from "../../lib/agentActivity";
 import { resolveTabNavigationIndex, type TabNavigationIntent } from "../../lib/tab-navigation";
 import "./chrome.css";
@@ -25,11 +26,16 @@ function stringToHue(str: string): number {
   return ((hash % 360) + 360) % 360;
 }
 
-const TabFavicon = (props: { favicon?: string; title: string; url: string }) => {
+const TabFavicon = (props: {
+  favicon?: string;
+  title: string;
+  url: string;
+  newTabLabel: string;
+}) => {
   const [failed, setFailed] = createSignal(false);
   const letter = () => {
-    const t = props.title?.trim();
-    if (t && t !== "New Tab") return t[0].toUpperCase();
+    const title = props.title?.trim();
+    if (title && title !== props.newTabLabel) return title[0].toUpperCase();
     try {
       return new URL(props.url).hostname[0]?.toUpperCase() || "?";
     } catch {
@@ -75,8 +81,10 @@ const TabBar: Component = () => {
     toggleMute,
   } = useTabs();
   const { runtimeState } = useRuntime();
+  const { t } = useI18n();
   const now = useNow();
   const [closingTabIds, setClosingTabIds] = createSignal<Set<string>>(new Set());
+  const newTabLabel = () => t("chrome.tabBar.newTab");
 
   const modelActiveTabIds = createMemo(() => getAgentActiveTabIds(runtimeState(), now()));
 
@@ -89,6 +97,7 @@ const TabBar: Component = () => {
     }
 
     const seenGroups = new Set<string>();
+    const groupDefault = t("chrome.tabBar.groupDefault");
     return tabs().flatMap((tab) => {
       const entries: TabBarEntry[] = [];
       if (tab.groupId && !seenGroups.has(tab.groupId)) {
@@ -96,7 +105,7 @@ const TabBar: Component = () => {
         entries.push({
           type: "group",
           groupId: tab.groupId,
-          name: tab.groupName || "Group",
+          name: tab.groupName || groupDefault,
           color: tab.groupColor || "blue",
           collapsed: !!tab.groupCollapsed,
           count: groupCounts.get(tab.groupId) ?? 0,
@@ -148,7 +157,7 @@ const TabBar: Component = () => {
 
   return (
     <div class="tab-bar">
-      <div class="tab-list" role="tablist" aria-label="Browser tabs">
+      <div class="tab-list" role="tablist" aria-label={t("chrome.tabBar.ariaLabel")}>
         <For each={tabEntries()}>
           {(entry) => (
             <Show
@@ -163,7 +172,7 @@ const TabBar: Component = () => {
                       e.preventDefault();
                       window.vessel.tabs.showGroupContextMenu(entry.groupId);
                     }}
-                    title={`${entry.name} (${entry.count} tabs)`}
+                    title={t("chrome.tabBar.groupTitle", { name: entry.name, count: entry.count })}
                   >
                     <span class="tab-group-dot" />
                     <span class="tab-group-name">{entry.name}</span>
@@ -175,6 +184,7 @@ const TabBar: Component = () => {
               {entry.type === "tab" &&
                 (() => {
                   const tab = entry.tab;
+                  const tabTitle = tab.title || newTabLabel();
                   return (
                     <div
                       id={`browser-tab-${tab.id}`}
@@ -194,19 +204,20 @@ const TabBar: Component = () => {
                         tab.isPinned
                           ? tab.title || tab.url
                           : modelActiveTabIds().has(tab.id)
-                            ? `${tab.title || "New Tab"} • Agent active`
+                            ? t("chrome.tabBar.agentActiveTitle", { title: tabTitle })
                             : tab.title
                       }
                       role="tab"
                       aria-selected={tab.id === activeTabId()}
-                      aria-label={tab.title || tab.url || "New Tab"}
+                      aria-label={tab.title || tab.url || newTabLabel()}
                       tabIndex={tab.id === activeTabId() ? 0 : -1}
                       onKeyDown={(event) => handleTabKeyDown(event, tab.id)}
                     >
                       <TabFavicon
                         favicon={tab.favicon}
-                        title={tab.title || "New Tab"}
+                        title={tabTitle}
                         url={tab.url}
+                        newTabLabel={newTabLabel()}
                       />
                       <Show when={tab.isPinned && (tab.isAudible || tab.isMuted)}>
                         <button
@@ -215,8 +226,12 @@ const TabBar: Component = () => {
                             e.stopPropagation();
                             void toggleMute(tab.id);
                           }}
-                          title={tab.isMuted ? "Unmute tab" : "Mute tab"}
-                          aria-label={tab.isMuted ? `Unmute ${tab.title}` : `Mute ${tab.title}`}
+                          title={tab.isMuted ? t("chrome.tabBar.unmute") : t("chrome.tabBar.mute")}
+                          aria-label={
+                            tab.isMuted
+                              ? t("chrome.tabBar.unmuteAria", { title: tab.title })
+                              : t("chrome.tabBar.muteAria", { title: tab.title })
+                          }
                         >
                           <Show when={tab.isMuted} fallback={<Volume2 size={11} />}>
                             <VolumeX size={11} />
@@ -229,10 +244,10 @@ const TabBar: Component = () => {
                             <span
                               class="tab-agent-indicator"
                               aria-hidden="true"
-                              title="Agent active on this tab"
+                              title={t("chrome.tabBar.agentActive")}
                             />
                           )}
-                          <span class="tab-title">{tab.title || "New Tab"}</span>
+                          <span class="tab-title">{tabTitle}</span>
                           <Show when={tab.isAudible || tab.isMuted}>
                             <button
                               class="tab-audio"
@@ -240,8 +255,14 @@ const TabBar: Component = () => {
                                 e.stopPropagation();
                                 void toggleMute(tab.id);
                               }}
-                              title={tab.isMuted ? "Unmute tab" : "Mute tab"}
-                              aria-label={tab.isMuted ? `Unmute ${tab.title}` : `Mute ${tab.title}`}
+                              title={
+                                tab.isMuted ? t("chrome.tabBar.unmute") : t("chrome.tabBar.mute")
+                              }
+                              aria-label={
+                                tab.isMuted
+                                  ? t("chrome.tabBar.unmuteAria", { title: tab.title })
+                                  : t("chrome.tabBar.muteAria", { title: tab.title })
+                              }
                             >
                               <Show when={tab.isMuted} fallback={<Volume2 size={12} />}>
                                 <VolumeX size={12} />
@@ -251,7 +272,11 @@ const TabBar: Component = () => {
                           {tab.isLoading && <span class="tab-loading" />}
                           <button
                             class="tab-close"
-                            aria-label={`Close ${tab.title || "tab"}`}
+                            aria-label={
+                              tab.title
+                                ? t("chrome.tabBar.closeAria", { title: tab.title })
+                                : t("chrome.tabBar.closeTab")
+                            }
                             onClick={(e) => {
                               e.stopPropagation();
                               handleClose(tab.id);
@@ -271,39 +296,39 @@ const TabBar: Component = () => {
       <div class="tab-actions">
         <button
           class="tab-new"
-          aria-label="New window"
+          aria-label={t("chrome.tabBar.newWindow")}
           onClick={() => window.vessel.tabs.openNewWindow()}
-          data-tooltip="New window"
+          data-tooltip={t("chrome.tabBar.newWindow")}
           data-tooltip-pos="left"
         >
           <PanelTop size={14} />
         </button>
         <button
           class="tab-new"
-          aria-label="Add active tab to group"
+          aria-label={t("chrome.tabBar.addToGroup")}
           onClick={() => {
             const id = activeTabId();
             if (id) void createGroup(id);
           }}
-          data-tooltip="Add active tab to group"
+          data-tooltip={t("chrome.tabBar.addToGroup")}
           data-tooltip-pos="left"
         >
           <LayersPlus size={14} />
         </button>
         <button
           class="tab-new"
-          aria-label="New tab"
+          aria-label={t("chrome.tabBar.newTabAction")}
           onClick={() => createTab()}
-          data-tooltip="New tab"
+          data-tooltip={t("chrome.tabBar.newTabAction")}
           data-tooltip-pos="left"
         >
           <Plus size={15} />
         </button>
         <button
           class="tab-new tab-new-private"
-          aria-label="New private window"
+          aria-label={t("chrome.tabBar.privateWindow")}
           onClick={() => window.vessel.tabs.openPrivateWindow()}
-          data-tooltip="Private window"
+          data-tooltip={t("chrome.tabBar.privateWindow")}
           data-tooltip-pos="left"
         >
           <VenetianMask size={12} />

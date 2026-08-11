@@ -1,6 +1,7 @@
 import type { Accessor, Setter } from "solid-js";
 import type {
   AgentTranscriptDisplayMode,
+  LocalePreference,
   PremiumState,
   ProviderId,
   ReasoningEffortLevel,
@@ -8,12 +9,7 @@ import type {
   SearchEngineId,
 } from "../../../../shared/types";
 
-export type SettingsCategoryId =
-  | "general"
-  | "agent"
-  | "vaults"
-  | "privacy"
-  | "account";
+export type SettingsCategoryId = "general" | "agent" | "vaults" | "privacy" | "account";
 
 // --- Data type aliases (extracted from Settings.tsx) ---
 
@@ -231,6 +227,8 @@ export interface SettingsGeneralProps {
   setDownloadPath: Setter<string>;
   theme: Accessor<"dark" | "light">;
   setTheme: Setter<"dark" | "light">;
+  locale: Accessor<LocalePreference>;
+  setLocale: Setter<LocalePreference>;
   autoRestoreSession: Accessor<boolean>;
   setAutoRestoreSession: Setter<boolean>;
   clearBookmarksOnLaunch: Accessor<boolean>;

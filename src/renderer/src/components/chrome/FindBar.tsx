@@ -1,11 +1,5 @@
-import {
-  createSignal,
-  createEffect,
-  onCleanup,
-  onMount,
-  Show,
-  type Component,
-} from "solid-js";
+import { createSignal, createEffect, onCleanup, onMount, Show, type Component } from "solid-js";
+import { useI18n } from "../../stores/i18n";
 import "./chrome.css";
 
 interface FindResult {
@@ -16,6 +10,7 @@ interface FindResult {
 }
 
 const FindBar: Component = () => {
+  const { t } = useI18n();
   const [open, setOpen] = createSignal(false);
   const [query, setQuery] = createSignal("");
   const [result, setResult] = createSignal<FindResult | null>(null);
@@ -112,7 +107,7 @@ const FindBar: Component = () => {
           type="text"
           value={query()}
           onInput={(e) => handleInput(e.currentTarget.value)}
-          placeholder="Find in page..."
+          placeholder={t("chrome.findBar.placeholder")}
           spellcheck={false}
         />
         <Show when={result()}>
@@ -120,27 +115,27 @@ const FindBar: Component = () => {
             <span class="find-bar-count">
               {r().matches > 0
                 ? `${r().activeMatchOrdinal} / ${r().matches}`
-                : "No results"}
+                : t("chrome.findBar.noResults")}
             </span>
           )}
         </Show>
         <button
           class="find-bar-btn"
-          title="Previous (Shift+Enter)"
+          title={t("chrome.findBar.previous")}
           onClick={() => findNext(false)}
         >
           &#9650;
         </button>
         <button
           class="find-bar-btn"
-          title="Next (Enter)"
+          title={t("chrome.findBar.next")}
           onClick={() => findNext(true)}
         >
           &#9660;
         </button>
         <button
           class="find-bar-btn find-bar-close"
-          title="Close (Escape)"
+          title={t("chrome.findBar.close")}
           onClick={close}
         >
           &times;
