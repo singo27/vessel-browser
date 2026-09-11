@@ -1,5 +1,6 @@
 import { createMemo, createSignal, For, Show, type Component, onMount, onCleanup } from "solid-js";
 import type { PermissionRecord, SecurityState } from "../../../../shared/types";
+import { useI18n } from "../../stores/i18n";
 
 interface SecurityPopupProps {
   state: SecurityState;
@@ -8,22 +9,29 @@ interface SecurityPopupProps {
 }
 
 const SecurityPopup: Component<SecurityPopupProps> = (props) => {
+  const { t } = useI18n();
   const statusText = () => {
     switch (props.state.status) {
       case "secure":
-        return "Connection is secure. This site uses HTTPS.";
+        return t("chrome.security.secure");
       case "insecure":
-        return "Connection is not secure. Information sent to this site could be read by others.";
+        return t("chrome.security.insecure");
       case "error":
-        return `Certificate error: ${props.state.errorMessage || "Unknown error"}. Proceed with caution.`;
+        return t("chrome.security.certError", {
+          message: props.state.errorMessage || t("chrome.security.unknownError"),
+        });
       default:
-        return "No security information available.";
+        return t("chrome.security.noInfo");
     }
   };
 
   const [permissions, setPermissions] = createSignal<PermissionRecord[]>([]);
   const origin = createMemo(() => {
-    try { return new URL(props.state.url).origin; } catch { return ""; }
+    try {
+      return new URL(props.state.url).origin;
+    } catch {
+      return "";
+    }
   });
   const sitePermissions = createMemo(() =>
     permissions().filter((item) => item.origin === origin()),
@@ -69,13 +77,13 @@ const SecurityPopup: Component<SecurityPopupProps> = (props) => {
       <div class="security-popup-content">
         <p class="security-popup-text">{statusText()}</p>
         <button class="security-popup-link" onClick={handleLearnMore}>
-          Learn More
+          {t("chrome.security.learnMore")}
         </button>
         <div class="security-popup-section">
-          <div class="security-popup-section-title">Site permissions</div>
+          <div class="security-popup-section-title">{t("chrome.security.sitePermissions")}</div>
           <Show
             when={sitePermissions().length > 0}
-            fallback={<p class="security-popup-muted">No saved permission decisions for this site.</p>}
+            fallback={<p class="security-popup-muted">{t("chrome.security.noSitePermissions")}</p>}
           >
             <For each={sitePermissions()}>
               {(item) => (
@@ -92,17 +100,17 @@ const SecurityPopup: Component<SecurityPopupProps> = (props) => {
                 await loadPermissions();
               }}
             >
-              Reset permissions for this site
+              {t("chrome.security.resetSite")}
             </button>
           </Show>
         </div>
         {props.state.canProceed && (
           <div class="security-popup-actions">
             <button class="security-popup-action-proceed" onClick={handleProceedAnyway}>
-              Proceed Anyway
+              {t("chrome.security.proceed")}
             </button>
             <button class="security-popup-action-back" onClick={handleGoBackToSafety}>
-              Go Back to Safety
+              {t("chrome.security.goBack")}
             </button>
           </div>
         )}

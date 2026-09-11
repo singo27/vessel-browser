@@ -1,3 +1,3 @@
 export { registerHighlightShortcut } from "./shortcuts";
-export { setupAppMenu } from "./menu";
+export { setupAppMenu, refreshAppMenu } from "./menu";
 export { loadRenderers } from "./renderer";

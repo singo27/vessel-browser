@@ -1,18 +1,7 @@
-import {
-  For,
-  Show,
-  createMemo,
-  type Component,
-} from "solid-js";
+import { For, Show, createMemo, type Component } from "solid-js";
 import { useRuntime } from "../../stores/runtime";
+import { useI18n } from "../../stores/i18n";
 import "./chrome.css";
-
-const statusLabel: Record<string, string> = {
-  active: "Active",
-  completed: "Completed",
-  abandoned: "Abandoned",
-  blocked: "Blocked",
-};
 
 const statusIcon: Record<string, string> = {
   active: "\u25B6",
@@ -23,6 +12,22 @@ const statusIcon: Record<string, string> = {
 
 const FlowProgress: Component = () => {
   const { runtimeState } = useRuntime();
+  const { t } = useI18n();
+
+  const statusLabel = (status: string) => {
+    switch (status) {
+      case "active":
+        return t("chrome.flowProgress.status.active");
+      case "completed":
+        return t("chrome.flowProgress.status.completed");
+      case "abandoned":
+        return t("chrome.flowProgress.status.abandoned");
+      case "blocked":
+        return t("chrome.flowProgress.status.blocked");
+      default:
+        return status;
+    }
+  };
 
   const flow = createMemo(() => runtimeState().flowState);
   const tracker = createMemo(() => runtimeState().taskTracker);
@@ -30,11 +35,16 @@ const FlowProgress: Component = () => {
 
   const stepStatusClass = (status: string) => {
     switch (status) {
-      case "done": return "flow-step-done";
-      case "active": return "flow-step-active";
-      case "failed": return "flow-step-failed";
-      case "skipped": return "flow-step-skipped";
-      default: return "flow-step-pending";
+      case "done":
+        return "flow-step-done";
+      case "active":
+        return "flow-step-active";
+      case "failed":
+        return "flow-step-failed";
+      case "skipped":
+        return "flow-step-skipped";
+      default:
+        return "flow-step-pending";
     }
   };
 
@@ -57,17 +67,19 @@ const FlowProgress: Component = () => {
                 <span class="flow-progress-goal">
                   {statusIcon[tm().status]} {tm().goal}
                 </span>
-                <span
-                  class={`task-memory-status task-memory-status-${tm().status}`}
-                >
-                  {statusLabel[tm().status]}
+                <span class={`task-memory-status task-memory-status-${tm().status}`}>
+                  {statusLabel(tm().status)}
                 </span>
               </div>
               <Show when={tm().blocker}>
-                <div class="task-memory-blocker">Blocked: {tm().blocker}</div>
+                <div class="task-memory-blocker">
+                  {t("chrome.flowProgress.blocked", { reason: tm().blocker! })}
+                </div>
               </Show>
               <Show when={tm().nextStep}>
-                <div class="task-memory-next-step">Next: {tm().nextStep}</div>
+                <div class="task-memory-next-step">
+                  {t("chrome.flowProgress.next", { step: tm().nextStep! })}
+                </div>
               </Show>
               <Show when={Object.keys(tm().facts).length > 0}>
                 <div class="task-memory-facts">
@@ -86,9 +98,7 @@ const FlowProgress: Component = () => {
                   <For each={tm().notes.slice(-3)}>
                     {(note) => (
                       <div class="task-memory-note">
-                        <span class="task-memory-note-time">
-                          {note.createdAt.slice(11, 16)}
-                        </span>
+                        <span class="task-memory-note-time">{note.createdAt.slice(11, 16)}</span>
                         <span class="task-memory-note-text">{note.text}</span>
                       </div>
                     )}
@@ -99,20 +109,20 @@ const FlowProgress: Component = () => {
           )}
         </Show>
         <Show when={tracker()}>
-          {(t) => (
+          {(trackerState) => (
             <div class="flow-progress-section">
               <div class="flow-progress-header">
-                <span class="flow-progress-goal">{t().goal}</span>
-                <span class="flow-progress-pct">{progressPercent(t().steps)}%</span>
+                <span class="flow-progress-goal">{trackerState().goal}</span>
+                <span class="flow-progress-pct">{progressPercent(trackerState().steps)}%</span>
               </div>
               <div class="flow-progress-bar-track">
                 <div
                   class="flow-progress-bar-fill"
-                  style={{ width: `${progressPercent(t().steps)}%` }}
+                  style={{ width: `${progressPercent(trackerState().steps)}%` }}
                 />
               </div>
               <div class="flow-steps">
-                <For each={t().steps}>
+                <For each={trackerState().steps}>
                   {(step) => (
                     <div class={`flow-step ${stepStatusClass(step.status)}`}>
                       <span class="flow-step-dot" />
@@ -121,11 +131,19 @@ const FlowProgress: Component = () => {
                   )}
                 </For>
               </div>
-              <Show when={t().lastAction}>
-                <div class="flow-progress-hint">Last: {t().lastAction}</div>
+              <Show when={trackerState().lastAction}>
+                <div class="flow-progress-hint">
+                  {t("chrome.flowProgress.last", { action: trackerState().lastAction! })}
+                </div>
               </Show>
-              <Show when={t().nextHint && !t().steps.every(s => s.status === "done")}>
-                <div class="flow-progress-hint">Next: {t().nextHint}</div>
+              <Show
+                when={
+                  trackerState().nextHint && !trackerState().steps.every((s) => s.status === "done")
+                }
+              >
+                <div class="flow-progress-hint">
+                  {t("chrome.flowProgress.next", { step: trackerState().nextHint! })}
+                </div>
               </Show>
             </div>
           )}

@@ -2,6 +2,7 @@ import {
   BROWSER_VIEW_SHORTCUTS,
   type BrowserShortcutSpec,
 } from "../../../shared/browser-shortcuts";
+import { t } from "../stores/i18n";
 
 export type BrowserCommandId =
   | "browser-command-palette"
@@ -379,15 +380,21 @@ export function createBrowserCommands(context: BrowserCommandContext): BrowserCo
   };
 
   return BROWSER_COMMAND_DEFINITIONS.filter((definition) => definition.showInPalette !== false).map(
-    (definition) => ({
-      id: definition.id,
-      label: definition.label,
-      hint: typeof definition.hint === "function" ? definition.hint(context) : definition.hint,
-      keywords: definition.keywords,
-      shortcut: definition.shortcutLabel,
-      icon: definition.icon,
-      run: actions[definition.id],
-    }),
+    (definition) => {
+      const hint =
+        definition.id === "reload"
+          ? context.activeTabTitle() || t(`commands.${definition.id}.hint`)
+          : t(`commands.${definition.id}.hint`);
+      return {
+        id: definition.id,
+        label: t(`commands.${definition.id}.label`),
+        hint,
+        keywords: definition.keywords,
+        shortcut: definition.shortcutLabel,
+        icon: definition.icon,
+        run: actions[definition.id],
+      };
+    },
   );
 }
 
@@ -398,7 +405,7 @@ export function getBrowserCommandShortcutHelp(
     (definition) => definition.shortcutLabel && (!privateMode || definition.privateMode !== false),
   ).map((definition) => ({
     keys: definition.shortcutLabel!,
-    action: definition.label,
+    action: t(`commands.${definition.id}.label`),
   }));
 }
 

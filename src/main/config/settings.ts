@@ -36,6 +36,7 @@ import {
 const defaults: VesselSettings = {
   defaultUrl: "https://start.duckduckgo.com",
   theme: "dark",
+  locale: "system",
   sidebarPanelMode: "docked",
   sidebarWidth: 400,
   sidebarDetachedBounds: null,
@@ -88,6 +89,7 @@ export const RENDERER_SETTABLE_KEYS: ReadonlySet<RendererSettableSettingKey> = n
 const SettingsValueSchemas: Record<keyof VesselSettings, z.ZodType> = {
   defaultUrl: z.string().url(),
   theme: z.enum(["dark", "light"]),
+  locale: z.enum(["system", "en", "zh-CN"]),
   sidebarPanelMode: z.enum(["closed", "docked", "detached"]),
   sidebarWidth: z.number().int().min(SIDEBAR_MIN_WIDTH).max(SIDEBAR_MAX_WIDTH),
   sidebarDetachedBounds: z.union([
@@ -454,6 +456,10 @@ function sanitizeAgentTranscriptMode(
   return legacyEnabled === true ? "full" : "off";
 }
 
+function sanitizeLocale(value: unknown): VesselSettings["locale"] {
+  return value === "en" || value === "zh-CN" || value === "system" ? value : "system";
+}
+
 export function parseSettingValue<K extends keyof VesselSettings>(
   key: K,
   value: unknown,
@@ -524,6 +530,7 @@ export function loadSettings(): VesselSettings {
         parsed.agentTranscriptMode,
         parsed.showAgentTranscript,
       ),
+      locale: sanitizeLocale(parsed.locale),
       historyRetentionDays: normalizeHistoryRetentionDays(parsed.historyRetentionDays),
     };
     if (premiumTokenMigrated) saveSettings();

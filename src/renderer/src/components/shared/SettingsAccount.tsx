@@ -1,8 +1,13 @@
 import { createSignal, For, onMount, Show, type Component } from "solid-js";
 import type { SettingsAccountProps } from "./settingsTypes";
-import { STATUS_MESSAGE_CLEAR_MS, STATUS_MESSAGE_LONG_CLEAR_MS } from "../../../../shared/ui-constants";
+import {
+  STATUS_MESSAGE_CLEAR_MS,
+  STATUS_MESSAGE_LONG_CLEAR_MS,
+} from "../../../../shared/ui-constants";
+import { useI18n } from "../../stores/i18n";
 
 const SettingsAccount: Component<SettingsAccountProps> = (props) => {
+  const { t } = useI18n();
   const p = props.premium;
   const s = props.sessions;
   const [feedbackExpanded, setFeedbackExpanded] = createSignal(false);
@@ -26,22 +31,19 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
     setFeedbackSending(true);
     setFeedbackStatus(null);
     try {
-      const result = await window.vessel.support.submitFeedback(
-        feedbackEmail(),
-        feedbackMessage(),
-      );
+      const result = await window.vessel.support.submitFeedback(feedbackEmail(), feedbackMessage());
       if (result.ok) {
         setFeedbackMessage("");
         setFeedbackExpanded(false);
         setFeedbackStatus({
           kind: "success",
-          text: "Feedback sent. Thank you.",
+          text: t("settings.account.support.sent"),
         });
         return;
       }
       setFeedbackStatus({
         kind: "error",
-        text: result.error || "Could not send feedback.",
+        text: result.error || t("settings.account.support.failed"),
       });
     } finally {
       setFeedbackSending(false);
@@ -59,7 +61,7 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
 
       {/* Support */}
       <div class="settings-field">
-        <label class="settings-label">Support</label>
+        <label class="settings-label">{t("settings.account.support.label")}</label>
         <div class="settings-inline-actions">
           <button
             class="settings-secondary-btn"
@@ -68,7 +70,9 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
               setFeedbackStatus(null);
             }}
           >
-            {feedbackExpanded() ? "Cancel" : "Submit Feedback"}
+            {feedbackExpanded()
+              ? t("settings.account.support.cancel")
+              : t("settings.account.support.submit")}
           </button>
         </div>
         <Show when={feedbackExpanded()}>
@@ -76,7 +80,7 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
             <input
               class="settings-input"
               type="email"
-              placeholder="Your reply email"
+              placeholder={t("settings.account.support.emailPlaceholder")}
               value={feedbackEmail()}
               onInput={(event) => {
                 setFeedbackEmail(event.currentTarget.value);
@@ -86,7 +90,7 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
             />
             <textarea
               class="settings-textarea settings-feedback-textarea"
-              placeholder="Tell us what happened, what you expected, or what would make Vessel better."
+              placeholder={t("settings.account.support.messagePlaceholder")}
               value={feedbackMessage()}
               onInput={(event) => {
                 setFeedbackMessage(event.currentTarget.value);
@@ -96,14 +100,12 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
             <div class="settings-inline-actions">
               <button
                 class="settings-secondary-btn"
-                disabled={
-                  feedbackSending() ||
-                  !feedbackEmail().trim() ||
-                  !feedbackMessage().trim()
-                }
+                disabled={feedbackSending() || !feedbackEmail().trim() || !feedbackMessage().trim()}
                 onClick={handleSubmitFeedback}
               >
-                {feedbackSending() ? "Sending..." : "Send Feedback"}
+                {feedbackSending()
+                  ? t("settings.account.support.sending")
+                  : t("settings.account.support.send")}
               </button>
             </div>
           </div>
@@ -125,22 +127,17 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
 
       {/* Vessel Premium */}
       <div class="settings-field">
-        <label class="settings-label">Vessel Premium</label>
+        <label class="settings-label">{t("settings.account.premium.label")}</label>
         <Show
           when={p.active()}
           fallback={
             <div class="premium-section">
-              <p class="premium-description">
-                Unlock screenshot/vision analysis, session management,
-                Obsidian integration, workflow tracking, DevTools tools,
-                table extraction, Agent Credential Vault, and unlimited
-                tool iterations.
-              </p>
+              <p class="premium-description">{t("settings.account.premium.description")}</p>
               <div class="premium-activate-row">
                 <input
                   class="settings-input premium-email-input"
                   type="email"
-                  placeholder="Enter your subscription email"
+                  placeholder={t("settings.account.premium.emailPlaceholder")}
                   value={p.email()}
                   onInput={(e) => {
                     const nextEmail = e.currentTarget.value;
@@ -159,22 +156,19 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                     p.setLoading(true);
                     p.setMessage(null);
                     try {
-                      const result = await window.vessel.premium.requestCode(
-                        p.email().trim(),
-                      );
+                      const result = await window.vessel.premium.requestCode(p.email().trim());
                       if (result.ok) {
                         p.setChallengeToken(result.challengeToken ?? "");
                         p.setCodeSent(true);
                         p.setMessage({
                           kind: "success",
-                          text:
-                            "If a matching premium subscription exists, we sent a 6-digit code to that email.",
+                          text: t("settings.account.premium.codeSent"),
                         });
                       } else {
                         p.resetFlow();
                         p.setMessage({
                           kind: "error",
-                          text: result.error || "Could not send code",
+                          text: result.error || t("settings.account.premium.codeFailed"),
                         });
                       }
                     } catch (err) {
@@ -184,7 +178,7 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                         text:
                           err instanceof Error
                             ? err.message
-                            : "Could not send code",
+                            : t("settings.account.premium.codeFailed"),
                       });
                     } finally {
                       p.setLoading(false);
@@ -192,10 +186,10 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                   }}
                 >
                   {p.loading()
-                    ? "Sending..."
+                    ? t("settings.account.premium.sending")
                     : p.codeSent()
-                      ? "Resend Code"
-                      : "Send Code"}
+                      ? t("settings.account.premium.resendCode")
+                      : t("settings.account.premium.sendCode")}
                 </button>
               </div>
               <Show when={p.codeSent()}>
@@ -204,7 +198,7 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                     class="settings-input premium-email-input"
                     inputmode="numeric"
                     maxLength={6}
-                    placeholder="Enter 6-digit code"
+                    placeholder={t("settings.account.premium.codePlaceholder")}
                     value={p.code()}
                     onInput={(e) => {
                       const nextCode = e.currentTarget.value.replace(/\D+/g, "").slice(0, 6);
@@ -235,12 +229,12 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                           p.resetFlow();
                           p.setMessage({
                             kind: "success",
-                            text: "Premium activated!",
+                            text: t("settings.account.premium.activated"),
                           });
                         } else {
                           p.setMessage({
                             kind: "error",
-                            text: result.error || "Verification failed",
+                            text: result.error || t("settings.account.premium.verifyFailed"),
                           });
                         }
                       } catch (err) {
@@ -249,14 +243,16 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                           text:
                             err instanceof Error
                               ? err.message
-                              : "Verification failed",
+                              : t("settings.account.premium.verifyFailed"),
                         });
                       } finally {
                         p.setLoading(false);
                       }
                     }}
                   >
-                    {p.loading() ? "Verifying..." : "Verify Code"}
+                    {p.loading()
+                      ? t("settings.account.premium.verifying")
+                      : t("settings.account.premium.verifyCode")}
                   </button>
                 </div>
               </Show>
@@ -268,8 +264,8 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                 }}
               >
                 {p.loading()
-                  ? "Opening Checkout..."
-                  : "Subscribe to Premium — $5.99/mo after 7-day free trial"}
+                  ? t("settings.account.premium.openingCheckout")
+                  : t("settings.account.premium.subscribe")}
               </button>
               <Show when={p.message()}>
                 {(msg) => (
@@ -295,7 +291,7 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                     p.setMessage(null);
                   }}
                 >
-                  Clear Saved Email
+                  {t("settings.account.premium.clearEmail")}
                 </button>
               </Show>
             </div>
@@ -303,15 +299,17 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
         >
           <div class="premium-section">
             <div class="premium-active-badge">
-              Premium Active
+              {t("settings.account.premium.active")}
               <Show when={p.state().status === "trialing"}>
-                {" "}(Trial)
+                {" "}
+                {t("settings.account.premium.trial")}
               </Show>
             </div>
             <p class="premium-detail">
               {p.state().email}
               <Show when={p.state().expiresAt}>
-                {" "}&middot; Renews{" "}
+                {" "}
+                &middot; {t("settings.account.premium.renews")}{" "}
                 {new Date(p.state().expiresAt).toLocaleDateString()}
               </Show>
             </p>
@@ -323,13 +321,13 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                   if (!result.ok) {
                     p.setMessage({
                       kind: "error",
-                      text: result.error || "Could not open billing portal.",
+                      text: result.error || t("settings.account.premium.portalFailed"),
                     });
                     setTimeout(() => p.setMessage(null), STATUS_MESSAGE_LONG_CLEAR_MS);
                   }
                 }}
               >
-                Manage Subscription
+                {t("settings.account.premium.manage")}
               </button>
               <button
                 class="premium-btn premium-btn-reset"
@@ -341,7 +339,7 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                   p.setMessage(null);
                 }}
               >
-                Sign Out
+                {t("settings.account.premium.signOut")}
               </button>
             </div>
             <Show when={p.message()}>
@@ -363,15 +361,14 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
 
       {/* Saved Sessions */}
       <div class="settings-field">
-        <label class="settings-label">Saved Sessions</label>
+        <label class="settings-label">{t("settings.account.sessions.label")}</label>
         <p class="settings-hint" style="margin-bottom: 10px">
-          Save the current browser state (tabs, cookies, storage) as a named
-          session. Restore it later from this panel.
+          {t("settings.account.sessions.hint")}
         </p>
         <div class="premium-activate-row" style="margin-bottom: 8px">
           <input
             class="settings-input premium-email-input"
-            placeholder="Session name"
+            placeholder={t("settings.account.sessions.namePlaceholder")}
             value={s.saveName()}
             onInput={(e) => s.setSaveName(e.currentTarget.value)}
             spellcheck={false}
@@ -384,14 +381,14 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                 await window.vessel.sessions.save(s.saveName().trim());
                 s.setSaveName("");
                 await s.loadList();
-                props.setStatus({ kind: "success", text: "Session saved." });
+                props.setStatus({ kind: "success", text: t("settings.account.sessions.saved") });
                 setTimeout(() => props.setStatus(null), STATUS_MESSAGE_CLEAR_MS);
               } catch (err) {
                 props.setStatus({ kind: "error", text: String(err) });
               }
             }}
           >
-            Save Current
+            {t("settings.account.sessions.saveCurrent")}
           </button>
         </div>
         <Show when={s.list().length > 0}>
@@ -402,9 +399,10 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                   <div class="vault-entry-info">
                     <span class="vault-entry-label">{session.name}</span>
                     <span class="vault-entry-detail">
-                      {new Date(session.updatedAt).toLocaleDateString()}
-                      {" "}&middot; {session.cookieCount} cookies
-                      {" "}&middot; {session.domains.length} domains
+                      {new Date(session.updatedAt).toLocaleDateString()} &middot;{" "}
+                      {t("settings.account.sessions.cookies", { count: session.cookieCount })}{" "}
+                      &middot;{" "}
+                      {t("settings.account.sessions.domains", { count: session.domains.length })}
                     </span>
                   </div>
                   <div style="display: flex; gap: 6px; align-items: center;">
@@ -414,15 +412,18 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                       onClick={async () => {
                         try {
                           await window.vessel.sessions.load(session.name);
-                          props.setStatus({ kind: "success", text: `Session "${session.name}" restored.` });
+                          props.setStatus({
+                            kind: "success",
+                            text: t("settings.account.sessions.restored", { name: session.name }),
+                          });
                           setTimeout(() => props.setStatus(null), STATUS_MESSAGE_CLEAR_MS);
                         } catch (err) {
                           props.setStatus({ kind: "error", text: String(err) });
                         }
                       }}
-                      title="Restore this session (replaces current tabs and cookies)"
+                      title={t("settings.account.sessions.loadTitle")}
                     >
-                      Load
+                      {t("settings.account.sessions.load")}
                     </button>
                     <button
                       class="vault-entry-remove"
@@ -430,7 +431,7 @@ const SettingsAccount: Component<SettingsAccountProps> = (props) => {
                         await window.vessel.sessions.delete(session.name);
                         await s.loadList();
                       }}
-                      title="Delete session"
+                      title={t("settings.account.sessions.deleteTitle")}
                     >
                       &times;
                     </button>

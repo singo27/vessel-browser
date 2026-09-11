@@ -1,11 +1,5 @@
-import {
-  For,
-  Show,
-  createSignal,
-  onMount,
-  onCleanup,
-  type Component,
-} from "solid-js";
+import { For, Show, createSignal, onMount, onCleanup, type Component } from "solid-js";
+import { useI18n } from "../../stores/i18n";
 import "./chrome.css";
 
 interface DownloadItem {
@@ -34,6 +28,7 @@ function formatBytes(bytes: number): string {
 }
 
 const DownloadToast: Component = () => {
+  const { t } = useI18n();
   const [downloads, setDownloads] = createSignal<DownloadItem[]>([]);
   const downloadMap = new Map<string, DownloadItem>();
   const timeoutIds = new Map<string, number>();
@@ -43,9 +38,7 @@ const DownloadToast: Component = () => {
     const timeoutId = window.setTimeout(() => dismissDownload(id), TOAST_EXIT_MS);
     timeoutIds.set(id, timeoutId);
 
-    setDownloads((current) =>
-      current.map((d) => (d.id === id ? { ...d, leaving: true } : d)),
-    );
+    setDownloads((current) => current.map((d) => (d.id === id ? { ...d, leaving: true } : d)));
   };
 
   const dismissDownload = (id: string) => {
@@ -95,7 +88,12 @@ const DownloadToast: Component = () => {
     const cleanupDone = window.vessel.downloads.onDone((info) => {
       const item = downloadMap.get(info.savePath);
       if (!item) return;
-      const finalState = info.state === "completed" ? "completed" : info.state === "cancelled" ? "cancelled" : "interrupted";
+      const finalState =
+        info.state === "completed"
+          ? "completed"
+          : info.state === "cancelled"
+            ? "cancelled"
+            : "interrupted";
       item.state = finalState;
       setDownloads((current) =>
         current.map((d) =>
@@ -141,10 +139,7 @@ const DownloadToast: Component = () => {
             </div>
             <Show when={dl.state === "progressing"}>
               <div class="download-toast-bar-track">
-                <div
-                  class="download-toast-bar-fill"
-                  style={{ width: `${progressPercent(dl)}%` }}
-                />
+                <div class="download-toast-bar-fill" style={{ width: `${progressPercent(dl)}%` }} />
               </div>
               <div class="download-toast-size">
                 {formatBytes(dl.receivedBytes)}
@@ -156,7 +151,7 @@ const DownloadToast: Component = () => {
             </Show>
             <Show when={dl.state === "completed"}>
               <div class="download-toast-size download-toast-size-done">
-                {formatBytes(dl.receivedBytes)} downloaded
+                {t("chrome.downloads.downloaded", { size: formatBytes(dl.receivedBytes) })}
               </div>
             </Show>
           </div>

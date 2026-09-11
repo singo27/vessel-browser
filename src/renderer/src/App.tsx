@@ -19,6 +19,7 @@ import KeyboardHelp from "./components/shared/KeyboardHelp";
 import ClearBrowsingData from "./components/chrome/ClearBrowsingData";
 import { useUI } from "./stores/ui";
 import { useTabs } from "./stores/tabs";
+import { useI18n } from "./stores/i18n";
 import { initSecurityStore } from "./stores/security";
 import { setupKeybindings } from "./lib/keybindings";
 import { useAnimatedPresence } from "./lib/useAnimatedPresence";
@@ -46,6 +47,7 @@ const App: Component = () => {
   } = useUI();
   const { createTab, closeTab, activeTabId, activeTab, zoomIn, zoomOut, zoomReset, reopenClosed } =
     useTabs();
+  const { t } = useI18n();
   const [highlightToast, setHighlightToast] = createSignal<{
     title: string;
     message: string;
@@ -63,11 +65,11 @@ const App: Component = () => {
         result.text.length > MAX_PREVIEW_TEXT
           ? result.text.slice(0, TRUNCATE_KEEP) + "..."
           : result.text;
-      setHighlightToast({ title: "Highlight saved", message: preview });
+      setHighlightToast({ title: t("chrome.notifications.highlightSaved"), message: preview });
     } else {
       setHighlightToast({
-        title: "No selection",
-        message: result.message || "Select text on the page first, then press Ctrl+H",
+        title: t("chrome.notifications.noSelection"),
+        message: result.message || t("chrome.notifications.selectFirst"),
       });
     }
   };
@@ -78,8 +80,8 @@ const App: Component = () => {
       showHighlightResult(result);
     } catch {
       setHighlightToast({
-        title: "Highlight failed",
-        message: "Could not capture selection",
+        title: t("chrome.notifications.highlightFailed"),
+        message: t("chrome.notifications.captureFailed"),
       });
     }
   };

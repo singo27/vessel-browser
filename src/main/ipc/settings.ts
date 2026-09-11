@@ -12,24 +12,15 @@ import { trackSettingChanged } from "../telemetry/posthog";
 import { createProvider } from "../ai/provider";
 import { regenerateMcpAuthToken, startMcpServer, stopMcpServer } from "../mcp/server";
 import { submitFeedback } from "../support/feedback";
-import {
-  assertTrustedIpcSender,
-  parseIpc,
-  type SendToRendererViews,
-} from "./common";
-import type {
-  ApprovalMode,
-  RendererSettableSettingKey,
-  VesselSettings,
-} from "../../shared/types";
+import { refreshAppMenu } from "../startup/menu";
+import { assertTrustedIpcSender, parseIpc, type SendToRendererViews } from "./common";
+import type { ApprovalMode, RendererSettableSettingKey, VesselSettings } from "../../shared/types";
 import type { AgentRuntime } from "../agent/runtime";
 import type { TabManager } from "../tabs/tab-manager";
 import type { ResearchOrchestrator } from "../agent/research/orchestrator";
 
 const SettingsKeySchema = z.custom<RendererSettableSettingKey>(
-  (key) =>
-    typeof key === "string" &&
-    RENDERER_SETTABLE_KEYS.has(key as RendererSettableSettingKey),
+  (key) => typeof key === "string" && RENDERER_SETTABLE_KEYS.has(key as RendererSettableSettingKey),
   { message: "Unknown setting key" },
 );
 
@@ -52,10 +43,15 @@ export function registerSettingsHandlers(
       await stopMcpServer();
       await startMcpServer(tabManager, runtime, updatedSettings.mcpPort);
     }
+    if (key === "locale") {
+      refreshAppMenu();
+    }
     const researchOrchestrator = getResearchOrchestrator();
     if (key === "chatProvider" && researchOrchestrator) {
       try {
-        researchOrchestrator.setProvider(createProvider(value as Parameters<typeof createProvider>[0]));
+        researchOrchestrator.setProvider(
+          createProvider(value as Parameters<typeof createProvider>[0]),
+        );
       } catch (err) {
         // Provider config is invalid — keep the current provider so
         // an in-progress research session can finish.
@@ -82,14 +78,17 @@ export function registerSettingsHandlers(
     return regenerateMcpAuthToken();
   });
 
-  ipcMain.handle(Channels.SUPPORT_SUBMIT_FEEDBACK, async (event, email: unknown, message: unknown) => {
-    assertTrustedIpcSender(event);
-    return submitFeedback({
-      email: typeof email === "string" ? email : "",
-      message: typeof message === "string" ? message : "",
-      source: "settings_account",
-    });
-  });
+  ipcMain.handle(
+    Channels.SUPPORT_SUBMIT_FEEDBACK,
+    async (event, email: unknown, message: unknown) => {
+      assertTrustedIpcSender(event);
+      return submitFeedback({
+        email: typeof email === "string" ? email : "",
+        message: typeof message === "string" ? message : "",
+        source: "settings_account",
+      });
+    },
+  );
 
   ipcMain.handle(Channels.SETTINGS_SET, async (event, key: unknown, value: unknown) => {
     assertTrustedIpcSender(event);

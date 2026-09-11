@@ -1,21 +1,23 @@
 import { createSignal, Show, type Component } from "solid-js";
 import { Check, X } from "lucide-solid";
 import type { ClearDataTimeRange } from "../../../../shared/types";
+import { useI18n } from "../../stores/i18n";
 import "./chrome.css";
 import { useModalFocus } from "../../lib/useModalFocus";
 
-const TIME_RANGES: { value: ClearDataTimeRange; label: string }[] = [
-  { value: "hour", label: "Last hour" },
-  { value: "day", label: "Last 24 hours" },
-  { value: "week", label: "Last 7 days" },
-  { value: "month", label: "Last 30 days" },
-  { value: "all", label: "All time" },
+const TIME_RANGE_KEYS: { value: ClearDataTimeRange; key: string }[] = [
+  { value: "hour", key: "chrome.clearData.range.hour" },
+  { value: "day", key: "chrome.clearData.range.day" },
+  { value: "week", key: "chrome.clearData.range.week" },
+  { value: "month", key: "chrome.clearData.range.month" },
+  { value: "all", key: "chrome.clearData.range.all" },
 ];
 
 const ClearBrowsingData: Component<{
   open: boolean;
   onClose: () => void;
 }> = (props) => {
+  const { t } = useI18n();
   const [cache, setCache] = createSignal(true);
   const [cookies, setCookies] = createSignal(false);
   const [history, setHistory] = createSignal(true);
@@ -43,7 +45,7 @@ const ClearBrowsingData: Component<{
         setDone(false);
       }, 1500);
     } catch {
-      setError("Could not clear browsing data.");
+      setError(t("chrome.clearData.error"));
     } finally {
       setClearing(false);
     }
@@ -85,32 +87,32 @@ const ClearBrowsingData: Component<{
             fallback={
               <div class="clear-data-done" role="status" aria-live="polite">
                 <Check size={20} stroke-width={2.5} />
-                <span>Browsing data cleared</span>
+                <span>{t("chrome.clearData.done")}</span>
               </div>
             }
           >
             <div class="clear-data-header">
-              <h3 id="clear-data-title">Clear browsing data</h3>
+              <h3 id="clear-data-title">{t("chrome.clearData.title")}</h3>
               <button
                 class="clear-data-close"
                 onClick={() => {
                   close();
                 }}
-                aria-label="Close clear browsing data"
+                aria-label={t("chrome.clearData.closeAria")}
               >
                 <X size={14} />
               </button>
             </div>
 
             <div class="clear-data-range">
-              <label>Time range</label>
+              <label>{t("chrome.clearData.timeRange")}</label>
               <select
                 value={timeRange()}
                 onChange={(e) => setTimeRange(e.currentTarget.value as ClearDataTimeRange)}
                 class="clear-data-select"
               >
-                {TIME_RANGES.map((r) => (
-                  <option value={r.value}>{r.label}</option>
+                {TIME_RANGE_KEYS.map((r) => (
+                  <option value={r.value}>{t(r.key)}</option>
                 ))}
               </select>
             </div>
@@ -122,7 +124,7 @@ const ClearBrowsingData: Component<{
                   checked={cache()}
                   onChange={(e) => setCache(e.currentTarget.checked)}
                 />
-                <span>Cached images and files</span>
+                <span>{t("chrome.clearData.cache")}</span>
               </label>
               <label class="clear-data-check">
                 <input
@@ -130,7 +132,7 @@ const ClearBrowsingData: Component<{
                   checked={cookies()}
                   onChange={(e) => setCookies(e.currentTarget.checked)}
                 />
-                <span>Cookies and other site data</span>
+                <span>{t("chrome.clearData.cookies")}</span>
               </label>
               <label class="clear-data-check">
                 <input
@@ -138,7 +140,7 @@ const ClearBrowsingData: Component<{
                   checked={history()}
                   onChange={(e) => setHistory(e.currentTarget.checked)}
                 />
-                <span>Browsing history</span>
+                <span>{t("chrome.clearData.history")}</span>
               </label>
               <label class="clear-data-check">
                 <input
@@ -146,7 +148,7 @@ const ClearBrowsingData: Component<{
                   checked={localStorage()}
                   onChange={(e) => setLocalStorage(e.currentTarget.checked)}
                 />
-                <span>Local storage</span>
+                <span>{t("chrome.clearData.localStorage")}</span>
               </label>
             </div>
 
@@ -163,14 +165,14 @@ const ClearBrowsingData: Component<{
                   close();
                 }}
               >
-                Cancel
+                {t("chrome.clearData.cancel")}
               </button>
               <button
                 class="clear-data-confirm"
                 disabled={clearing() || (!cache() && !cookies() && !history() && !localStorage())}
                 onClick={handleClear}
               >
-                {clearing() ? "Clearing..." : "Clear data"}
+                {clearing() ? t("chrome.clearData.clearing") : t("chrome.clearData.confirm")}
               </button>
             </div>
           </Show>

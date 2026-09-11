@@ -47,6 +47,7 @@ import AutomationTab from "./AutomationTab";
 import { ResearchDesk } from "./ResearchDesk";
 import PageDiffTimeline from "./PageDiffTimeline";
 import SidebarWindowControls from "./SidebarWindowControls";
+import { useI18n } from "../../stores/i18n";
 import vesselLogo from "../../assets/vessel-logo-transparent.png";
 import "./ai.css";
 
@@ -104,9 +105,10 @@ const PremiumPromptCard = (props: {
       ? "Unlock screenshots, saved sessions, workflow tracking, table extraction, and the credential vault with a 7-day free trial."
       : "Free chats pause after 50 tool calls in a turn. Vessel Premium raises the ceiling so the agent can finish longer workflows without stopping.";
 
+  const { t } = useI18n();
   return (
     <div class="premium-inline-offer" classList={{ compact: props.compact === true }}>
-      <div class="premium-inline-kicker">Vessel Premium</div>
+      <div class="premium-inline-kicker">{t("sidebar.premium.brand")}</div>
       <div class="premium-inline-title">{title}</div>
       <p class="premium-inline-copy">{body}</p>
       <div class="premium-inline-actions">
@@ -130,6 +132,7 @@ const PremiumPromptCard = (props: {
 };
 
 const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
+  const { t } = useI18n();
   const {
     messages,
     streamingText,
@@ -580,17 +583,17 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
   const approvalModeOptions = createMemo(() => [
     {
       value: "manual",
-      label: "Ask every time",
+      label: t("sidebar.approval.askEveryTime"),
       description: "Review each agent action before it runs.",
     },
     {
       value: "confirm-dangerous",
-      label: "Ask for risky actions",
+      label: t("sidebar.approval.askRisky"),
       description: "Allow routine actions, but stop on destructive or sensitive ones.",
     },
     {
       value: "auto",
-      label: "Allow all actions",
+      label: t("sidebar.approval.allowAll"),
       description: "Run everything without approval prompts.",
     },
   ]);
@@ -1021,11 +1024,15 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
         <div class="sidebar-header">
           <div class="sidebar-brand">
             <img class="sidebar-logo" src={vesselLogo} alt="Vessel" />
-            <span class="sidebar-brand-text">Vessel Browser</span>
+            <span class="sidebar-brand-text">{t("sidebar.brand")}</span>
           </div>
           <div class="sidebar-header-actions">
-            <button class="sidebar-clear" onClick={clearHistory} title="Clear chat">
-              Clear
+            <button
+              class="sidebar-clear"
+              onClick={clearHistory}
+              title={t("sidebar.clearChatTitle")}
+            >
+              {t("sidebar.clearChat")}
             </button>
             <SidebarWindowControls
               detached={sidebarDetached}
@@ -1044,7 +1051,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             aria-selected={sidebarTab() === "supervisor"}
             onClick={() => setSidebarTab("supervisor")}
           >
-            Supervisor
+            {t("sidebar.tabs.supervisor")}
             <Show when={runtimeState().supervisor.pendingApprovals.length > 0}>
               <span class="sidebar-tab-badge">
                 {runtimeState().supervisor.pendingApprovals.length}
@@ -1058,7 +1065,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             aria-selected={sidebarTab() === "runs"}
             onClick={() => setSidebarTab("runs")}
           >
-            Runs
+            {t("sidebar.tabs.runs")}
             <Show when={runs().some((run) => run.status === "waiting-approval")}>
               <span class="sidebar-tab-badge">
                 {runs().filter((run) => run.status === "waiting-approval").length}
@@ -1072,7 +1079,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             aria-selected={sidebarTab() === "conversations"}
             onClick={() => setSidebarTab("conversations")}
           >
-            Threads
+            {t("sidebar.tabs.threads")}
           </button>
           <button
             class="sidebar-tab"
@@ -1081,7 +1088,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             aria-selected={sidebarTab() === "bookmarks"}
             onClick={() => setSidebarTab("bookmarks")}
           >
-            Bookmarks
+            {t("sidebar.tabs.bookmarks")}
           </button>
           <button
             class="sidebar-tab"
@@ -1090,7 +1097,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             aria-selected={sidebarTab() === "checkpoints"}
             onClick={() => setSidebarTab("checkpoints")}
           >
-            Checkpoints
+            {t("sidebar.tabs.checkpoints")}
           </button>
           <button
             class="sidebar-tab"
@@ -1099,7 +1106,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             aria-selected={sidebarTab() === "chat"}
             onClick={() => setSidebarTab("chat")}
           >
-            Chat
+            {t("sidebar.tabs.chat")}
           </button>
           <button
             class="sidebar-tab"
@@ -1108,7 +1115,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             aria-selected={sidebarTab() === "automation"}
             onClick={() => setSidebarTab("automation")}
           >
-            Skills
+            {t("sidebar.tabs.skills")}
           </button>
           <button
             class="sidebar-tab"
@@ -1117,7 +1124,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             aria-selected={sidebarTab() === "history"}
             onClick={() => setSidebarTab("history")}
           >
-            History
+            {t("sidebar.tabs.history")}
           </button>
           <button
             class="sidebar-tab"
@@ -1126,7 +1133,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             aria-selected={sidebarTab() === "diff"}
             onClick={() => setSidebarTab("diff")}
           >
-            Changes
+            {t("sidebar.tabs.changes")}
           </button>
           <button
             class="sidebar-tab"
@@ -1135,8 +1142,8 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             aria-selected={sidebarTab() === "research"}
             onClick={() => setSidebarTab("research")}
           >
-            Research
-            <span class="sidebar-tab-beta">Beta</span>
+            {t("sidebar.tabs.research")}
+            <span class="sidebar-tab-beta">{t("sidebar.tabs.beta")}</span>
           </button>
         </div>
 
@@ -1152,16 +1159,20 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             <section class="agent-panel">
               <div class="agent-panel-header">
                 <div>
-                  <div class="agent-panel-title">Supervisor</div>
+                  <div class="agent-panel-title">{t("sidebar.supervisor.title")}</div>
                   <div class="agent-panel-subtitle">
-                    {runtimeState().supervisor.paused ? "Agent is paused" : "Agent is live"}
+                    {runtimeState().supervisor.paused
+                      ? t("sidebar.supervisor.paused")
+                      : t("sidebar.supervisor.live")}
                   </div>
                 </div>
                 <span
                   class="agent-status-pill"
                   classList={{ paused: runtimeState().supervisor.paused }}
                 >
-                  {runtimeState().supervisor.paused ? "Paused" : "Running"}
+                  {runtimeState().supervisor.paused
+                    ? t("sidebar.supervisor.statusPaused")
+                    : t("sidebar.supervisor.statusRunning")}
                 </span>
               </div>
 
@@ -1170,7 +1181,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                   class="agent-select"
                   value={runtimeState().supervisor.approvalMode}
                   options={approvalModeOptions()}
-                  ariaLabel="Approval mode"
+                  ariaLabel={t("sidebar.supervisor.approvalModeAria")}
                   onChange={(value) =>
                     void setApprovalMode(value as "auto" | "confirm-dangerous" | "manual")
                   }
@@ -1180,14 +1191,16 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                   type="button"
                   onClick={() => void (runtimeState().supervisor.paused ? resume() : pause())}
                 >
-                  {runtimeState().supervisor.paused ? "Resume" : "Pause"}
+                  {runtimeState().supervisor.paused
+                    ? t("sidebar.supervisor.resume")
+                    : t("sidebar.supervisor.pause")}
                 </button>
                 <button
                   class="agent-control-button"
                   type="button"
                   onClick={() => void restoreSession()}
                 >
-                  Restore session
+                  {t("sidebar.supervisor.restoreSession")}
                 </button>
                 <Show when={runtimeState().canUndo}>
                   <button
@@ -1197,10 +1210,10 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                     title={
                       runtimeState().undoInfo
                         ? `Undo: ${runtimeState().undoInfo!.actionName}`
-                        : "Undo last action"
+                        : t("sidebar.supervisor.undo")
                     }
                   >
-                    Undo last action
+                    {t("sidebar.supervisor.undo")}
                   </button>
                 </Show>
               </div>
@@ -1209,9 +1222,9 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
 
               <Show
                 when={runtimeState().supervisor.pendingApprovals.length > 0}
-                fallback={<div class="agent-muted">No pending approvals.</div>}
+                fallback={<div class="agent-muted">{t("sidebar.supervisor.noApprovals")}</div>}
               >
-                <div class="agent-section-title">Pending approvals</div>
+                <div class="agent-section-title">{t("sidebar.supervisor.pendingApprovals")}</div>
                 <For each={runtimeState().supervisor.pendingApprovals}>
                   {(approval) => (
                     <div class="agent-card agent-card-approval">
@@ -1223,7 +1236,9 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                         <div class="agent-card-copy">Domain: {approval.domain}</div>
                       </Show>
                       <div class="agent-card-copy">
-                        {approval.undoable ? "Undo available" : "This action is not undoable"}
+                        {approval.undoable
+                          ? t("sidebar.approval.undoAvailable")
+                          : t("sidebar.approval.notUndoable")}
                       </div>
                       <div class="agent-card-actions">
                         <button
@@ -1233,7 +1248,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                             void resolveApproval(approval.id, { decision: "approve-once" })
                           }
                         >
-                          Approve once
+                          {t("sidebar.approval.approveOnce")}
                         </button>
                         <Show when={approval.runId}>
                           <button
@@ -1243,7 +1258,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                               void resolveApproval(approval.id, { decision: "approve-run" })
                             }
                           >
-                            Approve for run
+                            {t("sidebar.approval.approveForRun")}
                           </button>
                         </Show>
                         <Show when={approval.domain}>
@@ -1254,7 +1269,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                               void resolveApproval(approval.id, { decision: "approve-domain" })
                             }
                           >
-                            Approve for domain
+                            {t("sidebar.approval.approveForDomain")}
                           </button>
                         </Show>
                         <button
@@ -1262,14 +1277,14 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                           type="button"
                           onClick={() => void resolveApproval(approval.id, { decision: "reject" })}
                         >
-                          Reject
+                          {t("sidebar.approval.reject")}
                         </button>
                       </div>
                       <div class="agent-card-actions">
                         <input
                           class="agent-steering-input"
                           value={approvalSteering()[approval.id] ?? ""}
-                          placeholder="Tell the agent what to do instead"
+                          placeholder={t("sidebar.approval.steerPlaceholder")}
                           onInput={(event) =>
                             setApprovalSteering((current) => ({
                               ...current,
@@ -1288,7 +1303,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                             })
                           }
                         >
-                          Reject and steer
+                          {t("sidebar.approval.rejectAndSteer")}
                         </button>
                       </div>
                     </div>
@@ -1297,7 +1312,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
               </Show>
 
               <div class="agent-section-header">
-                <div class="agent-section-title">Recent actions</div>
+                <div class="agent-section-title">{t("sidebar.supervisor.recentActions")}</div>
                 <Show when={recentActions().length > 0}>
                   <button
                     class="agent-section-toggle"
@@ -1305,19 +1320,19 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                     onClick={() => setActionsExpanded((current) => !current)}
                   >
                     {actionsExpanded()
-                      ? "Hide history"
-                      : `Show history (${recentActions().length})`}
+                      ? t("sidebar.supervisor.hideHistory")
+                      : t("sidebar.supervisor.showHistory", { count: recentActions().length })}
                   </button>
                 </Show>
               </div>
               <Show
                 when={recentActions().length > 0}
-                fallback={<div class="agent-muted">No actions yet.</div>}
+                fallback={<div class="agent-muted">{t("sidebar.supervisor.noActions")}</div>}
               >
                 <Show
                   when={actionsExpanded()}
                   fallback={
-                    <div class="agent-muted">Recent actions are collapsed to reduce noise.</div>
+                    <div class="agent-muted">{t("sidebar.supervisor.actionsCollapsed")}</div>
                   }
                 >
                   <For each={recentActions()}>
@@ -1386,7 +1401,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             <section class="agent-panel">
               <div class="agent-panel-header">
                 <div>
-                  <div class="agent-panel-title">Run Inbox</div>
+                  <div class="agent-panel-title">{t("sidebar.runs.inbox")}</div>
                   <div class="agent-muted">
                     Durable Chat, MCP, scheduled, and research activity.
                   </div>
@@ -1401,7 +1416,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                       type="button"
                       onClick={() => setRunFilter(filter)}
                     >
-                      {filter === "attention" ? "Needs attention" : filter}
+                      {filter === "attention" ? t("sidebar.runs.filterAttention") : filter}
                     </button>
                   )}
                 </For>
@@ -1424,7 +1439,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                     <Show when={selectedRun()!.error}>
                       <div class="agent-error">{selectedRun()!.error}</div>
                     </Show>
-                    <div class="agent-section-title">Timeline</div>
+                    <div class="agent-section-title">{t("sidebar.runs.timeline")}</div>
                     <For each={selectedRun()!.events}>
                       {(event) => (
                         <div class="run-event">
@@ -1461,14 +1476,20 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
               >
                 <Show
                   when={filteredRuns().length > 0}
-                  fallback={<div class="agent-muted">No runs match this filter.</div>}
+                  fallback={<div class="agent-muted">{t("sidebar.runs.noMatch")}</div>}
                 >
                   <For each={["Today", "Previous 7 days", "Older"] as const}>
                     {(bucket) => (
                       <Show
                         when={filteredRuns().some((run) => runAgeBucket(run.createdAt) === bucket)}
                       >
-                        <div class="agent-section-title">{bucket}</div>
+                        <div class="agent-section-title">
+                          {bucket === "Today"
+                            ? t("sidebar.runs.age.today")
+                            : bucket === "Previous 7 days"
+                              ? t("sidebar.runs.age.week")
+                              : t("sidebar.runs.age.older")}
+                        </div>
                         <For
                           each={filteredRuns().filter(
                             (run) => runAgeBucket(run.createdAt) === bucket,
@@ -1503,8 +1524,8 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             <section class="agent-panel">
               <div class="agent-panel-header">
                 <div>
-                  <div class="agent-panel-title">Conversation Library</div>
-                  <div class="agent-muted">Named threads persist securely across restarts.</div>
+                  <div class="agent-panel-title">{t("sidebar.threads.library")}</div>
+                  <div class="agent-muted">{t("sidebar.threads.libraryHint")}</div>
                 </div>
               </div>
               <div class="agent-card-actions conversation-create-row">
@@ -1688,7 +1709,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
               >
                 <Show
                   when={threads().length > 0}
-                  fallback={<div class="agent-muted">No saved threads yet.</div>}
+                  fallback={<div class="agent-muted">{t("sidebar.threads.noSaved")}</div>}
                 >
                   <For each={threads()}>
                     {(thread) => (
@@ -1719,7 +1740,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             <section class="bookmark-panel">
               <div class="bookmark-panel-header">
                 <div>
-                  <div class="bookmark-panel-title">Bookmarks</div>
+                  <div class="bookmark-panel-title">{t("sidebar.bookmarks.title")}</div>
                   <div class="bookmark-panel-subtitle">
                     {normalizedBookmarkSearch()
                       ? `${bookmarkMatchCount()} matches for "${bookmarkSearchQuery().trim()}"`
@@ -1727,7 +1748,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                   </div>
                 </div>
                 <Show when={currentTabSaved()}>
-                  <span class="bookmark-status-pill">Saved</span>
+                  <span class="bookmark-status-pill">{t("sidebar.bookmarks.saved")}</span>
                 </Show>
               </div>
 
@@ -1740,7 +1761,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
 
               <div class="bookmark-export-card">
                 <div>
-                  <div class="bookmark-panel-title">Export</div>
+                  <div class="bookmark-panel-title">{t("sidebar.bookmarks.export")}</div>
                   <div class="bookmark-panel-subtitle">
                     Save browser-ready HTML or a full Vessel archive
                   </div>
@@ -1783,7 +1804,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                   onClick={() => setBookmarkImportExpanded((current) => !current)}
                 >
                   <span class="bookmark-save-toggle-copy">
-                    <span class="bookmark-save-toggle-title">Import Bookmarks</span>
+                    <span class="bookmark-save-toggle-title">{t("sidebar.bookmarks.import")}</span>
                     <span class="bookmark-save-toggle-subtitle">
                       Import from HTML or Vessel JSON
                     </span>
@@ -1830,7 +1851,9 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                   onClick={() => setBookmarkSaveExpanded((current) => !current)}
                 >
                   <span class="bookmark-save-toggle-copy">
-                    <span class="bookmark-save-toggle-title">Save Current Page</span>
+                    <span class="bookmark-save-toggle-title">
+                      {t("sidebar.bookmarks.savePage")}
+                    </span>
                     <span class="bookmark-save-toggle-subtitle">Manual bookmark save options</span>
                   </span>
                   <span
@@ -1845,10 +1868,10 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                 <Show when={bookmarkSaveExpanded()}>
                   <div class="bookmark-save-card">
                     <div class="bookmark-current-title">
-                      {currentTab()?.title || "No active page"}
+                      {currentTab()?.title || t("sidebar.bookmarks.noActivePage")}
                     </div>
                     <div class="bookmark-current-url">
-                      {currentTab()?.url || "Open a page to save it here."}
+                      {currentTab()?.url || t("sidebar.bookmarks.noPageHint")}
                     </div>
                     <div class="bookmark-save-controls">
                       <DropdownSelect
@@ -1935,8 +1958,10 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                   fallback={
                     <div class="bookmark-empty-folder">
                       {normalizedBookmarkSearch()
-                        ? `No bookmarks matched "${bookmarkSearchQuery().trim()}".`
-                        : "No bookmarks saved yet."}
+                        ? t("sidebar.bookmarks.noMatch", {
+                            query: bookmarkSearchQuery().trim(),
+                          })
+                        : t("sidebar.bookmarks.empty")}
                     </div>
                   }
                 >
@@ -1996,7 +2021,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                                   void handleExportFolder(folder.id, folder.name);
                                 }}
                               >
-                                Export
+                                {t("sidebar.bookmarks.export")}
                               </button>
                               <button
                                 class="bookmark-ghost-button danger"
@@ -2278,7 +2303,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
             <section class="agent-panel checkpoint-panel">
               <div class="agent-panel-header">
                 <div>
-                  <div class="agent-panel-title">Checkpoints</div>
+                  <div class="agent-panel-title">{t("sidebar.checkpoints.title")}</div>
                   <div class="agent-panel-subtitle">
                     {recentCheckpoints().length > 0
                       ? `${recentCheckpoints().length} saved snapshots`
@@ -2319,7 +2344,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                 <div class="agent-section-title">Recent checkpoints</div>
                 <Show
                   when={recentCheckpoints().length > 0}
-                  fallback={<div class="agent-muted">No checkpoints yet.</div>}
+                  fallback={<div class="agent-muted">{t("sidebar.checkpoints.empty")}</div>}
                 >
                   <div class="checkpoint-timeline">
                     <For each={recentCheckpoints()}>
@@ -2376,7 +2401,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
           <Show when={sidebarTab() === "history"}>
             <div class="history-panel">
               <div class="history-panel-header">
-                <span class="history-panel-title">Browsing History</span>
+                <span class="history-panel-title">{t("sidebar.history.title")}</span>
                 <div class="history-panel-actions">
                   <button
                     class="history-clear-btn"
@@ -2429,14 +2454,14 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                 </For>
                 <Show when={history.hasMore()}>
                   <button class="history-entry" onClick={() => void history.loadMore()}>
-                    <span class="history-entry-title">Load more history</span>
+                    <span class="history-entry-title">{t("sidebar.history.loadMore")}</span>
                     <span class="history-entry-url">
                       Showing {history.historyState().entries.length} of {history.historyTotal()}
                     </span>
                   </button>
                 </Show>
                 <Show when={history.historyState().entries.length === 0}>
-                  <p class="history-empty">No browsing history yet.</p>
+                  <p class="history-empty">{t("sidebar.history.empty")}</p>
                 </Show>
               </div>
             </div>
@@ -2445,7 +2470,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
           <Show when={sidebarTab() === "diff"}>
             <section class="agent-panel">
               <div class="agent-panel-header">
-                <div class="agent-panel-title">What Changed</div>
+                <div class="agent-panel-title">{t("sidebar.changes.title")}</div>
                 <div class="agent-panel-subtitle">
                   {isPremium() ? "Page change timeline" : "Premium feature"}
                 </div>
@@ -2454,7 +2479,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                 when={isPremium()}
                 fallback={
                   <div class="kit-upsell premium-chat-banner">
-                    <p class="kit-upsell-title">Vessel Premium</p>
+                    <p class="kit-upsell-title">{t("sidebar.premium.brand")}</p>
                     <p class="kit-upsell-body premium-chat-banner-body">
                       The Diff timeline is a premium feature. Upgrade to see a full history of what
                       changed on this page.
@@ -2492,7 +2517,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
           <Show when={sidebarTab() === "chat"}>
             <Show when={!isPremium()}>
               <div class="kit-upsell premium-chat-banner">
-                <p class="kit-upsell-title">Vessel Premium</p>
+                <p class="kit-upsell-title">{t("sidebar.premium.brand")}</p>
                 <p class="kit-upsell-body premium-chat-banner-body">
                   Give the built-in agent a bigger toolbox and longer runway: screenshots, saved
                   sessions, workflow tracking, table extraction, and up to 1,000 tool calls per
@@ -2613,7 +2638,9 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                         <div class="chat-approval-detail">Domain: {approval.domain}</div>
                       </Show>
                       <div class="chat-approval-detail">
-                        {approval.undoable ? "Undo available" : "This action is not undoable"}
+                        {approval.undoable
+                          ? t("sidebar.approval.undoAvailable")
+                          : t("sidebar.approval.notUndoable")}
                       </div>
                       <div class="chat-approval-actions">
                         <button
@@ -2623,7 +2650,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                             void resolveApproval(approval.id, { decision: "approve-once" })
                           }
                         >
-                          Approve once
+                          {t("sidebar.approval.approveOnce")}
                         </button>
                         <Show when={approval.runId}>
                           <button
@@ -2633,7 +2660,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                               void resolveApproval(approval.id, { decision: "approve-run" })
                             }
                           >
-                            Approve run
+                            {t("sidebar.approval.approveForRun")}
                           </button>
                         </Show>
                         <Show when={approval.domain}>
@@ -2644,7 +2671,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                               void resolveApproval(approval.id, { decision: "approve-domain" })
                             }
                           >
-                            Approve domain
+                            {t("sidebar.approval.approveForDomain")}
                           </button>
                         </Show>
                         <button
@@ -2652,14 +2679,14 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                           type="button"
                           onClick={() => void resolveApproval(approval.id, { decision: "reject" })}
                         >
-                          Reject
+                          {t("sidebar.approval.reject")}
                         </button>
                       </div>
                       <div class="chat-approval-actions">
                         <input
                           class="chat-approval-steering"
                           value={approvalSteering()[approval.id] ?? ""}
-                          placeholder="Tell the agent what to do instead"
+                          placeholder={t("sidebar.approval.steerPlaceholder")}
                           onInput={(event) =>
                             setApprovalSteering((current) => ({
                               ...current,
@@ -2678,7 +2705,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                             })
                           }
                         >
-                          Reject and steer
+                          {t("sidebar.approval.rejectAndSteer")}
                         </button>
                       </div>
                     </div>
@@ -2998,7 +3025,7 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                     opacity="0.8"
                   />
                 </svg>
-                <p class="sidebar-empty-title">Your move.</p>
+                <p class="sidebar-empty-title">{t("sidebar.chat.empty")}</p>
                 <p class="sidebar-empty-hint">
                   Configure a provider in Settings (Ctrl+,) then ask anything about the current page
                   or beyond.
@@ -3012,7 +3039,11 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
           <Show when={isStreaming() || messages().length > 0}>
             <div class="chat-actions">
               <Show when={isStreaming()}>
-                <button class="chat-action-btn" onClick={() => cancel()} title="Stop generating">
+                <button
+                  class="chat-action-btn"
+                  onClick={() => cancel()}
+                  title={t("sidebar.chat.stopGenerating")}
+                >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                     <rect x="2" y="2" width="10" height="10" rx="1.5" fill="currentColor" />
                   </svg>
@@ -3020,7 +3051,11 @@ const Sidebar: Component<{ forceOpen?: boolean }> = (props) => {
                 </button>
               </Show>
               <Show when={!isStreaming() && messages().length > 0}>
-                <button class="chat-action-btn" onClick={handleRetry} title="Retry last prompt">
+                <button
+                  class="chat-action-btn"
+                  onClick={handleRetry}
+                  title={t("sidebar.chat.retry")}
+                >
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
                     <path
                       d="M11.5 7a4.5 4.5 0 1 1-1.3-3.2"

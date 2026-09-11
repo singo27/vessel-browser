@@ -1,13 +1,6 @@
-import {
-  For,
-  Show,
-  createMemo,
-  createSignal,
-  onCleanup,
-  onMount,
-  type Component,
-} from "solid-js";
+import { For, Show, createMemo, createSignal, onCleanup, onMount, type Component } from "solid-js";
 import { useRuntime } from "../../stores/runtime";
+import { useI18n } from "../../stores/i18n";
 import { useScrollFade } from "../../lib/useScrollFade";
 import { formatTime } from "../../lib/format-time";
 import {
@@ -21,6 +14,7 @@ import "./chrome.css";
 
 const AgentTranscriptDock: Component = () => {
   const { runtimeState } = useRuntime();
+  const { t } = useI18n();
   const [mode, setMode] = createSignal<AgentTranscriptDisplayMode>("off");
   const [collapsed, setCollapsed] = createSignal(false);
 
@@ -37,9 +31,7 @@ const AgentTranscriptDock: Component = () => {
 
   const timelineItems = createMemo(() => buildAgentTimelineItems(runtimeState()));
 
-  const hasStreamingEntry = createMemo(() =>
-    timelineItems().some(isLiveAgentTimelineItem),
-  );
+  const hasStreamingEntry = createMemo(() => timelineItems().some(isLiveAgentTimelineItem));
 
   const hideDock = async () => {
     setMode("off");
@@ -48,17 +40,14 @@ const AgentTranscriptDock: Component = () => {
 
   return (
     <Show when={mode() === "full" && timelineItems().length > 0}>
-      <aside
-        class="agent-transcript-dock"
-        classList={{ collapsed: collapsed() }}
-      >
+      <aside class="agent-transcript-dock" classList={{ collapsed: collapsed() }}>
         <div class="agent-transcript-header">
           <div class="agent-transcript-title-row">
-            <span class="agent-transcript-title">Agent Timeline</span>
+            <span class="agent-transcript-title">{t("chrome.agentTranscript.title")}</span>
             <Show when={hasStreamingEntry()}>
               <span class="agent-transcript-live">
                 <span class="agent-transcript-live-dot" aria-hidden="true" />
-                Live
+                {t("chrome.agentTranscript.live")}
               </span>
             </Show>
           </div>
@@ -66,14 +55,18 @@ const AgentTranscriptDock: Component = () => {
             <button
               class="agent-transcript-icon"
               onClick={() => setCollapsed((value) => !value)}
-              data-tooltip={collapsed() ? "Expand" : "Collapse"}
+              data-tooltip={
+                collapsed()
+                  ? t("chrome.agentTranscript.expand")
+                  : t("chrome.agentTranscript.collapse")
+              }
             >
               {collapsed() ? "▴" : "▾"}
             </button>
             <button
               class="agent-transcript-icon"
               onClick={() => void hideDock()}
-              data-tooltip="Hide"
+              data-tooltip={t("chrome.agentTranscript.hide")}
             >
               ×
             </button>
@@ -85,9 +78,7 @@ const AgentTranscriptDock: Component = () => {
             <For each={timelineItems()}>
               {(entry) => {
                 const duration = () =>
-                  entry.type === "action"
-                    ? formatAgentTimelineDuration(entry.durationMs)
-                    : null;
+                  entry.type === "action" ? formatAgentTimelineDuration(entry.durationMs) : null;
 
                 return (
                   <article
@@ -102,9 +93,7 @@ const AgentTranscriptDock: Component = () => {
                       <span class="agent-transcript-badge">{entry.label}</span>
                       <span class="agent-transcript-time">
                         {formatTime(entry.timestamp)}
-                        <Show when={duration()}>
-                          {(value) => <> · {value()}</>}
-                        </Show>
+                        <Show when={duration()}>{(value) => <> · {value()}</>}</Show>
                       </span>
                     </div>
                     <div class="agent-transcript-text">{entry.detail}</div>

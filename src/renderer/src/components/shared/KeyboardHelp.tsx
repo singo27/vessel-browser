@@ -2,6 +2,7 @@ import { Show, type Component } from "solid-js";
 import { useAnimatedPresence } from "../../lib/useAnimatedPresence";
 import { getBrowserCommandShortcutHelp } from "../../lib/browserCommands";
 import { useModalFocus } from "../../lib/useModalFocus";
+import { useI18n } from "../../stores/i18n";
 
 interface KeyboardHelpProps {
   open: boolean;
@@ -20,6 +21,7 @@ function shortcutParts(keys: string): string[][] {
 }
 
 const KeyboardHelp: Component<KeyboardHelpProps> = (props) => {
+  const { t } = useI18n();
   const { visible, closing } = useAnimatedPresence(() => props.open, 200);
   const shortcuts = () => getBrowserCommandShortcutHelp(props.privateMode);
   let dialogRef: HTMLDivElement | undefined;
@@ -43,11 +45,11 @@ const KeyboardHelp: Component<KeyboardHelpProps> = (props) => {
         >
           <div class="keyboard-help-header">
             <h2 id="keyboard-help-title" class="keyboard-help-title">
-              Keyboard Shortcuts
+              {t("keyboardHelp.title")}
             </h2>
             <button
               class="keyboard-help-close"
-              aria-label="Close keyboard shortcuts"
+              aria-label={t("keyboardHelp.closeAria")}
               onClick={props.onClose}
             >
               <kbd>Esc</kbd>
